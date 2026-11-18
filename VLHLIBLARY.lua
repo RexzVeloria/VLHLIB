@@ -1,3 +1,5 @@
+-- Just Indicator Is Update Or No ABCDEFGHSHSHSHSHSHSHEHEHDHDH
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
@@ -7,11 +9,13 @@ local HttpService = game:GetService("HttpService")
 local TextService = game:GetService("TextService")
 local Player = Players.LocalPlayer
 
-local VLH_DEVELOPER_USER_IDS = {}
-local VLH_DEVELOPER_TAG_TEXT = "🛠️ Developer"
-local VLH_DEVELOPER_TAG_MAX_DISTANCE = 180
+local REXXZY_DEVELOPER_USER_IDS = {
+    [10652722254] = true,
+}
+local REXXZY_DEVELOPER_TAG_TEXT = "🛠️ Developer"
+local REXXZY_DEVELOPER_TAG_MAX_DISTANCE = 180
 
-local VlhLogos = {
+local RexxzyLogos = {
     Veloria = "rbxassetid://131946786209484",
     veloria = "rbxassetid://131946786209484",
     Verlo = "rbxassetid://131946786209484",
@@ -39,16 +43,16 @@ local function ColorInt(c)
 	return type(c) == "number" and c or 0xE6E6E6
 end
 
-local VlhWebhookConfig = {}
-VlhWebhookConfig.__index = VlhWebhookConfig
+local WebhookConfig = {}
+WebhookConfig.__index = WebhookConfig
 
-function VlhWebhookConfig.new(name, cfg)
+function WebhookConfig.new(name, cfg)
 	cfg = cfg or {}
-	local self = setmetatable({}, VlhWebhookConfig)
+	local self = setmetatable({}, WebhookConfig)
 	self.Name = name or "Config"
 	self.Enabled = cfg.Enabled ~= false
 	self.URL = cfg.URL or ""
-	self.Username = cfg.Username or "Veloria Hub"
+	self.Username = cfg.Username or "Rexxzy"
 	self.AvatarURL = cfg.AvatarURL or ""
 	self.SendPlayer = cfg.SendPlayer ~= false
 	self.SendGame = cfg.SendGame ~= false
@@ -69,14 +73,14 @@ function VlhWebhookConfig.new(name, cfg)
 	return self
 end
 
-function VlhWebhookConfig:_CanSend()
+function WebhookConfig:_CanSend()
 	if not self.Enabled then return false end
 	if self.URL == "" then return false end
 	local f = syn and syn.request or (http and http.request) or request or http_request
 	return f ~= nil
 end
 
-function VlhWebhookConfig:_GetPlayer()
+function WebhookConfig:_GetPlayer()
 	if self._playerCache then return self._playerCache end
 	local ok, r = pcall(function()
 		return { Username = Player.Name, DisplayName = Player.DisplayName, UserId = Player.UserId }
@@ -85,7 +89,7 @@ function VlhWebhookConfig:_GetPlayer()
 	return self._playerCache
 end
 
-function VlhWebhookConfig:_GetGame()
+function WebhookConfig:_GetGame()
 	if self._gameCache then return self._gameCache end
 	local ok, r = pcall(function()
 		return { PlaceId = game.PlaceId, JobId = game.JobId, Executor = SafeGetExecutor() }
@@ -94,7 +98,7 @@ function VlhWebhookConfig:_GetGame()
 	return self._gameCache
 end
 
-function VlhWebhookConfig:_BuildFields(data)
+function WebhookConfig:_BuildFields(data)
 	local fields = {}
 	if type(data) == "table" then
 		for k, v in pairs(data) do
@@ -127,7 +131,7 @@ function VlhWebhookConfig:_BuildFields(data)
 	return fields
 end
 
-function VlhWebhookConfig:_DoPost(payload)
+function WebhookConfig:_DoPost(payload)
 	local f = syn and syn.request or (http and http.request) or request or http_request
 	if not f then self._stats.failed = self._stats.failed + 1 return false end
 	local ok, body = pcall(HttpService.JSONEncode, HttpService, payload)
@@ -142,13 +146,13 @@ function VlhWebhookConfig:_DoPost(payload)
 	return true
 end
 
-function VlhWebhookConfig:_Enqueue(payload)
+function WebhookConfig:_Enqueue(payload)
 	if #self._queue >= self.QueueMax then self._stats.dropped = self._stats.dropped + 1 return false end
 	table.insert(self._queue, payload)
 	return true
 end
 
-function VlhWebhookConfig:_StartWorker()
+function WebhookConfig:_StartWorker()
 	task.spawn(function()
 		while self._running do
 			task.wait(0.5)
@@ -169,30 +173,30 @@ function VlhWebhookConfig:_StartWorker()
 	end)
 end
 
-function VlhWebhookConfig:_FireListeners(event, data)
+function WebhookConfig:_FireListeners(event, data)
 	local list = self._listeners[event]
 	if list then for _, cb in ipairs(list) do pcall(cb, data) end end
 	local any = self._listeners["*"]
 	if any then for _, cb in ipairs(any) do pcall(cb, event, data) end end
 end
 
-function VlhWebhookConfig:_MakePayload(embed)
+function WebhookConfig:_MakePayload(embed)
 	local p = { username = self.Username, embeds = { embed } }
 	if self.AvatarURL ~= "" then p.avatar_url = self.AvatarURL end
 	return p
 end
 
-function VlhWebhookConfig:RegisterEvent(name, tpl)
+function WebhookConfig:RegisterEvent(name, tpl)
 	tpl = tpl or {}
 	self._events[name] = { title = tpl.title or tpl.Title or name, color = tpl.color or tpl.Color or self.Color }
 end
 
-function VlhWebhookConfig:On(event, cb)
+function WebhookConfig:On(event, cb)
 	if not self._listeners[event] then self._listeners[event] = {} end
 	table.insert(self._listeners[event], cb)
 end
 
-function VlhWebhookConfig:Send(event, data)
+function WebhookConfig:Send(event, data)
 	if not self:_CanSend() then return false end
 	self:_FireListeners(event, data)
 	local tpl = self._events[event] or { title = tostring(event), color = self.Color }
@@ -201,7 +205,7 @@ function VlhWebhookConfig:Send(event, data)
 	return self:_Enqueue(self:_MakePayload(embed))
 end
 
-function VlhWebhookConfig:SendEmbed(tbl)
+function WebhookConfig:SendEmbed(tbl)
 	if not self:_CanSend() or type(tbl) ~= "table" then return false end
 	local embed = {
 		title = tbl.Title or tbl.title or "Embed",
@@ -217,7 +221,7 @@ function VlhWebhookConfig:SendEmbed(tbl)
 	return self:_Enqueue(self:_MakePayload(embed))
 end
 
-function VlhWebhookConfig:SendEmbeds(list)
+function WebhookConfig:SendEmbeds(list)
 	if not self:_CanSend() or type(list) ~= "table" then return false end
 	local embeds = {}
 	for i, tbl in ipairs(list) do
@@ -236,17 +240,17 @@ function VlhWebhookConfig:SendEmbeds(list)
 	return self:_Enqueue(p)
 end
 
-function VlhWebhookConfig:SendRaw(payload)
+function WebhookConfig:SendRaw(payload)
 	if not self:_CanSend() or type(payload) ~= "table" then return false end
 	return self:_Enqueue(payload)
 end
 
-function VlhWebhookConfig:SendContent(text)
+function WebhookConfig:SendContent(text)
 	if not self:_CanSend() then return false end
 	return self:_Enqueue({ username = self.Username, content = tostring(text) })
 end
 
-function VlhWebhookConfig:Flush()
+function WebhookConfig:Flush()
 	if not self._running or self._flushing then return false end
 	self._flushing = true
 	task.spawn(function()
@@ -274,19 +278,19 @@ function VlhWebhookConfig:Flush()
 	return true
 end
 
-function VlhWebhookConfig:ClearQueue()
+function WebhookConfig:ClearQueue()
 	self._stats.dropped = self._stats.dropped + #self._queue
 	self._queue = {}
 end
 
-function VlhWebhookConfig:GetStats()
+function WebhookConfig:GetStats()
 	return { sent = self._stats.sent, failed = self._stats.failed, queued = #self._queue, dropped = self._stats.dropped }
 end
 
-function VlhWebhookConfig:GetPlayerInfo() return self:_GetPlayer() end
-function VlhWebhookConfig:GetGameInfo() return self:_GetGame() end
+function WebhookConfig:GetPlayerInfo() return self:_GetPlayer() end
+function WebhookConfig:GetGameInfo() return self:_GetGame() end
 
-function VlhWebhookConfig:Configure(cfg)
+function WebhookConfig:Configure(cfg)
 	if type(cfg) ~= "table" then return false end
 	for k, v in pairs(cfg) do self[k] = v end
 	if cfg.RateDelay ~= nil then self.RateDelay = math.max(0, tonumber(cfg.RateDelay) or 2) end
@@ -294,32 +298,32 @@ function VlhWebhookConfig:Configure(cfg)
 	return true
 end
 
-function VlhWebhookConfig:Destroy()
+function WebhookConfig:Destroy()
 	self._running = false
 	self._queue = {}
 	return true
 end
 
-function VlhWebhookConfig:SetEnabled(b) self.Enabled = b == true end
-function VlhWebhookConfig:SetURL(u) self.URL = u or "" end
+function WebhookConfig:SetEnabled(b) self.Enabled = b == true end
+function WebhookConfig:SetURL(u) self.URL = u or "" end
 
-local VlhWebhook = {}
-VlhWebhook._configs = {}
+local RexxzyWebhook = {}
+RexxzyWebhook._configs = {}
 
-function VlhWebhook:NewConfig(name, cfg)
+function RexxzyWebhook:NewConfig(name, cfg)
 	name = tostring(name or "Default")
 	local previous = self._configs[name]
 	if previous and previous.Destroy then previous:Destroy() end
-	local c = VlhWebhookConfig.new(name, cfg)
+	local c = WebhookConfig.new(name, cfg)
 	self._configs[name] = c
 	return c
 end
 
-function VlhWebhook:Get(name)
+function RexxzyWebhook:Get(name)
 	return self._configs[name]
 end
 
-function VlhWebhook:AttachToLibrary(lib, configNameOrObj)
+function RexxzyWebhook:AttachToLibrary(lib, configNameOrObj)
 	local cfg = type(configNameOrObj) == "string" and self._configs[configNameOrObj] or configNameOrObj
 	if not cfg or not lib then return end
 	if lib.SetNotification then
@@ -333,7 +337,7 @@ function VlhWebhook:AttachToLibrary(lib, configNameOrObj)
 end
 
 local Theme = {
-	
+	-- Clean monochrome palette inspired by the KittenHub reference.
 	Accent = Color3.fromRGB(245, 245, 247),
 	AccentSoft = Color3.fromRGB(194, 194, 199),
 	Dark = Color3.fromRGB(4, 4, 5),
@@ -446,7 +450,8 @@ do
 	end
 
 	function Custom:Card(Parent, Height, Name, Clickable)
-
+		-- Controls are rendered as clean rows inside the section container.
+		-- The section owns the outer border; each row only receives a subtle hover state.
 		local Card = Custom:Create(Clickable and "TextButton" or "Frame", {
 			BackgroundColor3 = Theme.White, BackgroundTransparency = 1, BorderSizePixel = 0,
 			Size = UDim2.new(1, 0, 0, Height), Name = Name,
@@ -1268,6 +1273,7 @@ function Icons:FetchLucide(Name)
 	if Key == "" or not string.match(Key, "^[a-z0-9%-]+$") or string.find(Key, "%.%.", 1, true) then return false end
 	if self.Remote[Key] then return true end
 
+	
 	local FailedAt = self.RemoteFailureAt[Key]
 	if FailedAt and (os.clock() - FailedAt) < 30 then return false end
 	if type(HttpFetch) ~= "function" then return false end
@@ -1836,7 +1842,7 @@ end
 function Custom:MakeIcon(Parent, Source, Props)
 	if Source == nil or Source == "" or Source == false then return nil end
 	Props = Props or {}
-	if type(Source) == "string" then Source = VlhLogos[Source] or Source end
+	if type(Source) == "string" then Source = RexxzyLogos[Source] or Source end
 	local Size = 16
 	if typeof(Props.Size) == "UDim2" then Size = Props.Size.X.Offset > 0 and Props.Size.X.Offset or 16 end
 	local Color = Props.Color or Theme.Sub
@@ -1929,13 +1935,13 @@ function Custom:Graphic(Parent, Source, Props)
 	return Obj
 end
 
-local VlhLibrary = {}
-VlhLibrary.Unloaded = false
-VlhLibrary.Logos = VlhLogos
+local Rexxzy_Library = {}
+Rexxzy_Library.Unloaded = false
+Rexxzy_Library.Logos = RexxzyLogos
 
-function VlhLibrary:GetLogo(Name)
+function Rexxzy_Library:GetLogo(Name)
     if type(Name) ~= "string" then return nil end
-    return VlhLogos[Name] or VlhLogos[string.lower(Name)] or VlhLogos[string.upper(Name)]
+    return RexxzyLogos[Name] or RexxzyLogos[string.lower(Name)] or RexxzyLogos[string.upper(Name)]
 end
 
 local NotifGui, NotifContainer, NotifCounter, NotifListLayout = nil, nil, 0, nil
@@ -1967,7 +1973,7 @@ local function EnsureNotifGui()
 		return
 	end
 	NotifGui = Custom:Create("ScreenGui", {
-		Name = "VlhNotify", ZIndexBehavior = Enum.ZIndexBehavior.Sibling, ResetOnSpawn = false,
+		Name = "RexxzyNotify", ZIndexBehavior = Enum.ZIndexBehavior.Sibling, ResetOnSpawn = false,
 		DisplayOrder = 1000, IgnoreGuiInset = true,
 	}, Custom:GetGuiParent())
 	NotifContainer = Custom:Create("Frame", {
@@ -1987,7 +1993,7 @@ local function EnsureNotifGui()
 	UpdateNotificationLayout()
 end
 
-function VlhLibrary:SetNotification(Config)
+function Rexxzy_Library:SetNotification(Config)
 	if type(Config) == "string" then Config = { Content = Config } end
 	Config = type(Config) == "table" and Config or {}
 	EnsureNotifGui()
@@ -2012,6 +2018,7 @@ function VlhLibrary:SetNotification(Config)
 	local Delay = math.clamp(tonumber(Config.Delay or Config[6]) or 3, 0.5, 30)
 	local AnimT = math.clamp(tonumber(Config.Time or Config[5]) or 0.22, 0.12, 0.6)
 
+	
 	for I = #ActiveNotificationRecords, 1, -1 do
 		local Record = ActiveNotificationRecords[I]
 		if not (Record.Slot and Record.Slot.Parent) then table.remove(ActiveNotificationRecords, I) end
@@ -2128,13 +2135,13 @@ function VlhLibrary:SetNotification(Config)
 	return NF
 end
 
-VlhLibrary.Elements = {}
-VlhLibrary.ConfigFolder = "VeloriaHub/Configs"
-VlhLibrary.LegacyFolder = "Rexxzy"
-VlhLibrary.Loading = false
-VlhLibrary.Flags = setmetatable({}, {
+Rexxzy_Library.Elements = {}
+Rexxzy_Library.ConfigFolder = "Rexxzy/Configs"
+Rexxzy_Library.LegacyFolder = "Rexxzy"
+Rexxzy_Library.Loading = false
+Rexxzy_Library.Flags = setmetatable({}, {
 	__index = function(_, Key)
-		local E = VlhLibrary.Elements[Key]
+		local E = Rexxzy_Library.Elements[Key]
 		if E then
 			local ok, v = pcall(E.Get)
 			if ok then return v end
@@ -2158,8 +2165,8 @@ end
 local function EnsureFolders()
 	if not (makefolder and isfolder) then return end
 	pcall(function()
-		if not isfolder(VlhLibrary.LegacyFolder) then makefolder(VlhLibrary.LegacyFolder) end
-		if not isfolder(VlhLibrary.ConfigFolder) then makefolder(VlhLibrary.ConfigFolder) end
+		if not isfolder(Rexxzy_Library.LegacyFolder) then makefolder(Rexxzy_Library.LegacyFolder) end
+		if not isfolder(Rexxzy_Library.ConfigFolder) then makefolder(Rexxzy_Library.ConfigFolder) end
 	end)
 end
 
@@ -2193,7 +2200,7 @@ local function CleanName(Name)
 end
 
 local function ConfigPath(Name)
-	return VlhLibrary.ConfigFolder .. "/" .. tostring(Name) .. ".json"
+	return Rexxzy_Library.ConfigFolder .. "/" .. tostring(Name) .. ".json"
 end
 
 local function ReadJson(Path)
@@ -2239,8 +2246,8 @@ local function FireConfigs()
 	for _, Fn in ipairs(ConfigListeners) do pcall(Fn) end
 end
 
-local function IndexPath() return VlhLibrary.ConfigFolder .. "/_index.json" end
-local function SettingsPath() return VlhLibrary.ConfigFolder .. "/_settings.json" end
+local function IndexPath() return Rexxzy_Library.ConfigFolder .. "/_index.json" end
+local function SettingsPath() return Rexxzy_Library.ConfigFolder .. "/_settings.json" end
 
 local function SaveIndexSoon()
 	if IndexDirty or not FsReady() then return end
@@ -2300,18 +2307,18 @@ local function ReadHeader(Path)
 	return { h = {}, u = {}, t = 0, legacy = true }
 end
 
-function VlhLibrary:GetOwner()
+function Rexxzy_Library:GetOwner()
 	local O = GetOwner()
 	return { Hwid = O.h, Account = O.u }
 end
 
-function VlhLibrary:RefreshOwner()
+function Rexxzy_Library:RefreshOwner()
 	OwnerCache = nil
 	FireConfigs()
 	return self:GetOwner()
 end
 
-function VlhLibrary:OnConfigsChanged(Fn)
+function Rexxzy_Library:OnConfigsChanged(Fn)
 	table.insert(ConfigListeners, Fn)
 	return {
 		Disconnect = function()
@@ -2320,7 +2327,7 @@ function VlhLibrary:OnConfigsChanged(Fn)
 	}
 end
 
-function VlhLibrary:RescanConfigs(Done, Force)
+function Rexxzy_Library:RescanConfigs(Done, Force)
 	if not FsReady() or not listfiles then
 		if Done then task.spawn(Done) end
 		return false
@@ -2348,7 +2355,7 @@ function VlhLibrary:RescanConfigs(Done, Force)
 		if Force then ConfigIndex.Items = {} end
 		local Present = {}
 		local Reads = 0
-		local ok, Files = pcall(listfiles, VlhLibrary.ConfigFolder)
+		local ok, Files = pcall(listfiles, Rexxzy_Library.ConfigFolder)
 		if ok and type(Files) == "table" then
 			for _, Path in ipairs(Files) do
 				local Name = string.match(tostring(Path), "([^/\\]+)%.json$")
@@ -2370,7 +2377,7 @@ function VlhLibrary:RescanConfigs(Done, Force)
 		if not Settings.legacyDone then
 			Settings.legacyDone = true
 			SaveSettingsSoon()
-			local ok2, Old = pcall(listfiles, VlhLibrary.LegacyFolder)
+			local ok2, Old = pcall(listfiles, Rexxzy_Library.LegacyFolder)
 			if ok2 and type(Old) == "table" then
 				local Moved = 0
 				for _, Path in ipairs(Old) do
@@ -2400,7 +2407,7 @@ function VlhLibrary:RescanConfigs(Done, Force)
 	return true
 end
 
-function VlhLibrary:GetConfigs()
+function Rexxzy_Library:GetConfigs()
 	if not ConfigIndex.Loaded and not ConfigIndex.Scanning then self:RescanConfigs() end
 	local Out = {}
 	for Name, It in pairs(ConfigIndex.Items) do
@@ -2410,7 +2417,7 @@ function VlhLibrary:GetConfigs()
 	return Out
 end
 
-function VlhLibrary:SaveConfig(Name, Silent)
+function Rexxzy_Library:SaveConfig(Name, Silent)
 	if not FsReady() then return false, "writefile is not supported" end
 	local Clean = CleanName(Name)
 	if not Clean then return false, "invalid config name" end
@@ -2447,7 +2454,7 @@ function VlhLibrary:SaveConfig(Name, Silent)
 	return true, Clean
 end
 
-function VlhLibrary:LoadConfig(Name, Done)
+function Rexxzy_Library:LoadConfig(Name, Done)
 	if not FsReady() then
 		if Done then task.spawn(Done, false, "readfile is not supported") end
 		return false, "readfile is not supported"
@@ -2497,7 +2504,7 @@ function VlhLibrary:LoadConfig(Name, Done)
 	return true, Clean
 end
 
-function VlhLibrary:DeleteConfig(Name)
+function Rexxzy_Library:DeleteConfig(Name)
 	if not (delfile and isfile) then return false end
 	local Clean = CleanName(Name)
 	if not Clean then return false end
@@ -2527,17 +2534,17 @@ function VlhLibrary:DeleteConfig(Name)
 	return true
 end
 
-function VlhLibrary:SetAutoLoad(Name)
+function Rexxzy_Library:SetAutoLoad(Name)
 	local S = LoadSettings()
 	SetPointer(S.autoload, Name and CleanName(Name) or nil)
 	SaveSettingsSoon()
 end
 
-function VlhLibrary:GetAutoLoad()
+function Rexxzy_Library:GetAutoLoad()
 	return GetPointer(LoadSettings().autoload)
 end
 
-function VlhLibrary:LoadAutoConfig(Done)
+function Rexxzy_Library:LoadAutoConfig(Done)
 	local Name = self:GetAutoLoad()
 	if not Name then
 		if Done then task.spawn(Done, false, "no auto-load config") end
@@ -2554,7 +2561,7 @@ function VlhLibrary:LoadAutoConfig(Done)
 	return true
 end
 
-function VlhLibrary:SetAutoSave(Name)
+function Rexxzy_Library:SetAutoSave(Name)
 	local S = LoadSettings()
 	local Clean = Name and CleanName(Name) or nil
 	SetPointer(S.autosave, Clean)
@@ -2562,12 +2569,12 @@ function VlhLibrary:SetAutoSave(Name)
 	SaveSettingsSoon()
 end
 
-function VlhLibrary:GetAutoSave()
+function Rexxzy_Library:GetAutoSave()
 	AutoSaveName = GetPointer(LoadSettings().autosave)
 	return AutoSaveName
 end
 
-function VlhLibrary:MarkDirty()
+function Rexxzy_Library:MarkDirty()
 	if self.Loading or not self.Armed then return end
 	if not AutoSaveName then return end
 	DirtyFlag = true
@@ -2582,27 +2589,27 @@ function VlhLibrary:MarkDirty()
 	end)
 end
 
-function VlhLibrary:ClearImageCache()
+function Rexxzy_Library:ClearImageCache()
 	Custom:ClearImageCache()
 end
 
-function VlhLibrary:Notify(Config)
+function Rexxzy_Library:Notify(Config)
 	return self:SetNotification(Config)
 end
 
-function VlhLibrary:NotifySuccess(Content, Title)
+function Rexxzy_Library:NotifySuccess(Content, Title)
 	return self:SetNotification({ Type = "success", Title = Title or "Success", Content = Content })
 end
-function VlhLibrary:NotifyError(Content, Title)
+function Rexxzy_Library:NotifyError(Content, Title)
 	return self:SetNotification({ Type = "error", Title = Title or "Error", Content = Content })
 end
-function VlhLibrary:NotifyWarning(Content, Title)
+function Rexxzy_Library:NotifyWarning(Content, Title)
 	return self:SetNotification({ Type = "warning", Title = Title or "Warning", Content = Content })
 end
-function VlhLibrary:NotifyInfo(Content, Title)
+function Rexxzy_Library:NotifyInfo(Content, Title)
 	return self:SetNotification({ Type = "info", Title = Title or "Information", Content = Content })
 end
-function VlhLibrary:ClearNotifications()
+function Rexxzy_Library:ClearNotifications()
 	local Count = #ActiveNotificationRecords
 	for Index = #ActiveNotificationRecords, 1, -1 do
 		local Record = ActiveNotificationRecords[Index]
@@ -2611,34 +2618,34 @@ function VlhLibrary:ClearNotifications()
 	return Count
 end
 
-function VlhLibrary:RegisterIcon(Name, Source) return Icons:Register(Name, Source) end
-function VlhLibrary:HasIcon(Name) return Icons:Resolve(Name) ~= nil end
-function VlhLibrary:GetIcons() return Icons:List() end
-function VlhLibrary:SetLucideFallback(Enabled)
+function Rexxzy_Library:RegisterIcon(Name, Source) return Icons:Register(Name, Source) end
+function Rexxzy_Library:HasIcon(Name) return Icons:Resolve(Name) ~= nil end
+function Rexxzy_Library:GetIcons() return Icons:List() end
+function Rexxzy_Library:SetLucideFallback(Enabled)
 	Icons.RemoteEnabled = Enabled ~= false
 	return Icons.RemoteEnabled
 end
-function VlhLibrary:IsLucideFallbackEnabled() return Icons.RemoteEnabled ~= false end
+function Rexxzy_Library:IsLucideFallbackEnabled() return Icons.RemoteEnabled ~= false end
 
 task.defer(function()
 	if FsReady() then
-		VlhLibrary:GetAutoSave()
-		VlhLibrary:RescanConfigs()
+		Rexxzy_Library:GetAutoSave()
+		Rexxzy_Library:RescanConfigs()
 	end
 end)
 
-function VlhLibrary:CreateWindow(Config)
+function Rexxzy_Library:CreateWindow(Config)
 	Config = type(Config) == "table" and Config or {}
-	local Title = Config[1] or Config.Title or "VELORIA HUB"
+	local Title = Config[1] or Config.Title or ""
 	local Desc = Config[2] or Config.Description or ""
-	local _CfgTabWidth = Config[3] or Config["Tab Width"] or 220
+	local _CfgTabWidth = Config[3] or Config["Tab Width"] or 176
 	local IsMobileCtx = UserInputService.TouchEnabled
 	
 	local MobileLayout = IsMobileCtx and Config.MobileResponsive ~= false
 	local TabWidth = IsMobileCtx and math.min(math.max(_CfgTabWidth, 118), 136) or math.max(_CfgTabWidth, 157)
-	local SizeUi = Config[4] or Config.SizeUi or UDim2.fromOffset(1280, 820)
+	local SizeUi = Config[4] or Config.SizeUi or UDim2.fromOffset(900, 560)
 	local Keybind = Config[5] or Config.Keybind or Enum.KeyCode.RightControl
-	local Icon = Config[6] or Config.Icon or VlhLogos.Veloria
+	local Icon = Config[6] or Config.Icon or "hub"
 	local Funcs = {}
 	local SearchRegistry = {}
 	local Conns, Loops = {}, {}
@@ -2647,14 +2654,17 @@ function VlhLibrary:CreateWindow(Config)
 
 	local function Track(c) table.insert(Conns, c) return c end
 
+	
+	
+	
 	local DeveloperTagEnabled = true
-	local DeveloperTagText = VLH_DEVELOPER_TAG_TEXT
+	local DeveloperTagText = REXXZY_DEVELOPER_TAG_TEXT
 	local DeveloperTagColor = Color3.fromRGB(245, 245, 245)
-	local DeveloperTagDistance = VLH_DEVELOPER_TAG_MAX_DISTANCE
+	local DeveloperTagDistance = REXXZY_DEVELOPER_TAG_MAX_DISTANCE
 	local DeveloperIdLookup = {}
 	local DeveloperPlayerConnections = {}
 
-	for UserId, Enabled in pairs(VLH_DEVELOPER_USER_IDS) do
+	for UserId, Enabled in pairs(REXXZY_DEVELOPER_USER_IDS) do
 		local Id = tonumber(UserId)
 		if Enabled == true and Id and Id > 0 then
 			DeveloperIdLookup[tostring(math.floor(Id))] = true
@@ -2663,7 +2673,7 @@ function VlhLibrary:CreateWindow(Config)
 
 	local function RemoveDeveloperTag(Character)
 		if not Character then return end
-		local Existing = Character:FindFirstChild("VlhDeveloperTag")
+		local Existing = Character:FindFirstChild("RexxzyDeveloperTag")
 		if Existing then Existing:Destroy() end
 	end
 
@@ -2673,12 +2683,12 @@ function VlhLibrary:CreateWindow(Config)
 			RemoveDeveloperTag(Character)
 			return
 		end
-		if Character:FindFirstChild("VlhDeveloperTag") then return end
+		if Character:FindFirstChild("RexxzyDeveloperTag") then return end
 		local Head = Character:FindFirstChild("Head") or Character:WaitForChild("Head", 10)
 		if not Head or not Head:IsA("BasePart") then return end
 		if TargetPlayer.Character ~= Character or not DeveloperTagEnabled then return end
 		local Billboard = Custom:Create("BillboardGui", {
-			Name = "VlhDeveloperTag", Adornee = Head, AlwaysOnTop = true,
+			Name = "RexxzyDeveloperTag", Adornee = Head, AlwaysOnTop = true,
 			LightInfluence = 0, MaxDistance = DeveloperTagDistance,
 			Size = UDim2.fromOffset(154, 29), StudsOffset = Vector3.new(0, 2.85, 0),
 		}, Character)
@@ -2747,16 +2757,17 @@ function VlhLibrary:CreateWindow(Config)
 		return tw
 	end
 
-	local VlhGui = Custom:Create("ScreenGui", {
-		Name = "VeloriaHub", ZIndexBehavior = Enum.ZIndexBehavior.Sibling, ResetOnSpawn = false,
+	local RexxzyGui = Custom:Create("ScreenGui", {
+		Name = "Rexxzy", ZIndexBehavior = Enum.ZIndexBehavior.Sibling, ResetOnSpawn = false,
 		IgnoreGuiInset = true, DisplayOrder = 100,
 	}, Custom:GetGuiParent())
 
 	local Base = tonumber(Config.Scale or Config.UIScale) or 1.12
 	do
-		local Screen = VlhGui.AbsoluteSize
+		local Screen = RexxzyGui.AbsoluteSize
 		if MobileLayout and Screen and Screen.X > 0 and Screen.Y > 0 then
-
+			
+			
 			local MobileW = math.floor(math.min(Screen.X * 0.94, 680))
 			local MobileH = math.floor(math.min(Screen.Y * 0.88, 820))
 			SizeUi = UDim2.fromOffset(math.max(1, MobileW), math.max(1, MobileH))
@@ -2775,8 +2786,8 @@ function VlhLibrary:CreateWindow(Config)
 	local DropShadowHolder = Custom:Create("Frame", {
 		AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, BorderSizePixel = 0,
 		Position = UDim2.new(0.5, 0, 0.5, 0), Size = SizeUi, Name = "DropShadowHolder",
-	}, VlhGui)
-	local WindowScale = Custom:Create("UIScale", { Scale = Base * 0.9 }, DropShadowHolder)
+	}, RexxzyGui)
+	local WindowScale = Custom:Create("UIScale", { Scale = Base }, DropShadowHolder)
 
 	local Main = Custom:Create("Frame", {
 		BackgroundColor3 = Theme.Black, BackgroundTransparency = 0, BorderSizePixel = 0,
@@ -2785,10 +2796,11 @@ function VlhLibrary:CreateWindow(Config)
 	Custom:Corner(Main, 14)
 	Custom:AddGradient(Main, 125, Custom.GradientWindow)
 	local MainStroke = Custom:Stroke(Main, Theme.Border, 0.58, 1.1)
+	
 
 	local function RefreshMobileLayout()
 		if not MobileLayout or Destroyed or not DropShadowHolder.Parent then return end
-		local Screen = VlhGui.AbsoluteSize
+		local Screen = RexxzyGui.AbsoluteSize
 		local Scale = math.max(tonumber(Base) or 1, 0.1)
 		if not Screen or Screen.X <= 0 or Screen.Y <= 0 then return end
 		local Width = math.floor(math.min(680, (Screen.X * 0.94) / Scale))
@@ -2797,7 +2809,7 @@ function VlhLibrary:CreateWindow(Config)
 	end
 
 	if MobileLayout then
-		Track(VlhGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		Track(RexxzyGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
 			task.defer(RefreshMobileLayout)
 		end))
 		task.defer(RefreshMobileLayout)
@@ -2839,16 +2851,16 @@ function VlhLibrary:CreateWindow(Config)
 	end
 
 	local Top = Custom:Create("Frame", {
-		BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 78), Name = "Top",
+		BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.new(1, 0, 0, 48), Name = "Top",
 	}, Main)
 
 	Custom:Create("Frame", {
 		BackgroundColor3 = Theme.White, BackgroundTransparency = 0.82, BorderSizePixel = 0,
-		Position = UDim2.new(0, 0, 0, 78), Size = UDim2.new(1, 0, 0, 1), Name = "DecideFrame",
+		Position = UDim2.new(0, 0, 0, 48), Size = UDim2.new(1, 0, 0, 1), Name = "DecideFrame",
 	}, Main)
 	local LineGlow = Custom:Create("Frame", {
 		BackgroundColor3 = Theme.White, BorderSizePixel = 0,
-		Position = UDim2.new(0, 0, 0, 78), Size = UDim2.new(1, 0, 0, 1), Name = "DecideGlow",
+		Position = UDim2.new(0, 0, 0, 48), Size = UDim2.new(1, 0, 0, 1), Name = "DecideGlow",
 	}, Main)
 	local LineGradient = Custom:Create("UIGradient", {
 		Color = Custom.GradientLine,
@@ -2870,18 +2882,7 @@ function VlhLibrary:CreateWindow(Config)
 	}, TitleHolder)
 	Custom:Create("UIPadding", { PaddingLeft = UDim.new(0, 9) }, TitleHolder)
 
-	local HeaderLogo
-	local HeaderLogoSource = Config.HeaderLogo
-	if HeaderLogoSource == nil then HeaderLogoSource = VlhLogos.Veloria end
-	if HeaderLogoSource then
-		HeaderLogo = Custom:Create("ImageLabel", {
-			BackgroundColor3 = Theme.Field, BackgroundTransparency = 0.08, BorderSizePixel = 0,
-			Image = tostring(HeaderLogoSource), ScaleType = Enum.ScaleType.Fit,
-			Size = UDim2.new(0, 38, 0, 38), LayoutOrder = 0, Name = "HeaderLogo",
-		}, TitleHolder)
-		Custom:Corner(HeaderLogo, 7)
-		Custom:Stroke(HeaderLogo, Theme.Border, 0.5, 1)
-	end
+	-- The application logo lives in SidebarLogoTile, not in the title bar.
 
 	local TextLabel = Custom:Label(TitleHolder, {
 		Text = Title, TextColor3 = Theme.White, TextSize = 19, Font = Enum.Font.GothamBold, LayoutOrder = 1,
@@ -3012,7 +3013,7 @@ function VlhLibrary:CreateWindow(Config)
 	local Close = Custom:Create("TextButton", {
 		Text = "", AutoButtonColor = false, AnchorPoint = Vector2.new(1, 0.5), BackgroundColor3 = Theme.Red,
 		BorderSizePixel = 0, ClipsDescendants = true, Position = UDim2.new(1, -8, 0.5, 0),
-		Size = UDim2.new(0, 38, 0, 38), Name = "Close",
+		Size = UDim2.new(0, 32, 0, 32), Name = "Close",
 	}, Top)
 	Custom:Corner(Close, 6)
 	for _, Rot in ipairs({ 45, -45 }) do
@@ -3027,8 +3028,8 @@ function VlhLibrary:CreateWindow(Config)
 
 	local Min = Custom:Create("TextButton", {
 		Text = "", AutoButtonColor = false, AnchorPoint = Vector2.new(1, 0.5), BackgroundColor3 = Theme.Black,
-		BackgroundTransparency = 0, BorderSizePixel = 0, ClipsDescendants = true, Position = UDim2.new(1, -54, 0.5, 0),
-		Size = UDim2.new(0, 38, 0, 38), Name = "Min",
+		BackgroundTransparency = 0, BorderSizePixel = 0, ClipsDescendants = true, Position = UDim2.new(1, -46, 0.5, 0),
+		Size = UDim2.new(0, 32, 0, 32), Name = "Min",
 	}, Top)
 	Custom:Corner(Min, 6)
 	local MinStroke = Custom:Stroke(Min, Theme.White, 0.8, 1)
@@ -3050,9 +3051,11 @@ function VlhLibrary:CreateWindow(Config)
 		for _, TagText in ipairs(Config.Tags or Config[7]) do TagsFuncs:Add(TagText) end
 	end
 
-	local SidebarHeroMode = Config.SidebarHeroMode == true and not IsMobileCtx and (SizeUi.X.Offset >= 720) and (SizeUi.Y.Offset >= 500)
-	local SidebarTop = SidebarHeroMode and 162 or 86
-	local SidebarBottom = SidebarHeroMode and 170 or 94
+	-- On larger desktop windows, lift the brand mark above the sidebar so the
+	-- navigation panel begins beneath it, like the supplied reference image.
+	local SidebarHeroMode = not IsMobileCtx and (SizeUi.X.Offset >= 720) and (SizeUi.Y.Offset >= 500)
+	local SidebarTop = SidebarHeroMode and 132 or 56
+	local SidebarBottom = SidebarHeroMode and 140 or 64
 	local Side = Custom:Create("Frame", {
 		BackgroundColor3 = Theme.Panel, BackgroundTransparency = 0, BorderSizePixel = 0,
 		ClipsDescendants = true, Position = UDim2.new(0, 8, 0, SidebarTop),
@@ -3065,7 +3068,7 @@ function VlhLibrary:CreateWindow(Config)
 		BackgroundTransparency = 1, BorderSizePixel = 0,
 		Position = SidebarHeroMode and UDim2.new(0, 8, 0, 55) or UDim2.new(0, 10, 0, 8),
 		Size = SidebarHeroMode and UDim2.new(0, TabWidth, 0, 84) or UDim2.new(1, -20, 0, 56),
-		Visible = SidebarHeroMode, Name = "SidebarBrand",
+		Name = "SidebarBrand",
 	}, SidebarHeroMode and Main or Side)
 	local SidebarLogoTile = Custom:Create("Frame", {
 		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -3105,7 +3108,7 @@ function VlhLibrary:CreateWindow(Config)
 
 	local SearchBoxContainer = Custom:Create("Frame", {
 		BackgroundColor3 = Theme.Field, BackgroundTransparency = 0, BorderSizePixel = 0,
-		Position = SidebarHeroMode and UDim2.new(0, 9, 0, 9) or UDim2.new(0, 9, 1, -105), Size = UDim2.new(1, -18, 0, 36), Name = "SBC",
+		Position = UDim2.new(0, 9, 0, SidebarHeroMode and 9 or 67), Size = UDim2.new(1, -18, 0, 36), Name = "SBC",
 	}, Side)
 	Custom:Corner(SearchBoxContainer, 8)
 	local SearchStroke = Custom:Stroke(SearchBoxContainer, Theme.Border, 0.7, 1)
@@ -3133,8 +3136,8 @@ function VlhLibrary:CreateWindow(Config)
 
 	local Layers = Custom:Create("Frame", {
 		BackgroundColor3 = Theme.Black, BackgroundTransparency = 0, BorderSizePixel = 0,
-		ClipsDescendants = true, Position = UDim2.new(0, TabWidth + 18, 0, 86),
-		Size = UDim2.new(1, -(TabWidth + 26), 1, -94), Name = "Layers",
+		ClipsDescendants = true, Position = UDim2.new(0, TabWidth + 18, 0, 56),
+		Size = UDim2.new(1, -(TabWidth + 26), 1, -64), Name = "Layers",
 	}, Main)
 	Custom:Corner(Layers, 16)
 	Custom:Stroke(Layers, Theme.Border, 0.42, 1)
@@ -3164,12 +3167,47 @@ function VlhLibrary:CreateWindow(Config)
 		Position = UDim2.new(0, 8, 0, 76), Size = UDim2.new(1, -16, 1, -84), Name = "LayersReal",
 	}, Layers)
 
+	-- VLH tier badge, center bottom of content panel
+	do
+		local VLH_IsPremium = false -- ubah ke true kalau user premium
+		local VLH_TierText = VLH_IsPremium and "VLH · Premium v0.001" or "VLH · Free V1"
+		local VLH_TierColor = VLH_IsPremium and Color3.fromRGB(255, 215, 80) or Color3.fromRGB(160, 160, 160)
+
+		local VLHBadge = Custom:Create("Frame", {
+			Name = "VLHBadge",
+			AnchorPoint = Vector2.new(0.5, 1),
+			Position = UDim2.new(0.5, 0, 1, -10),
+			Size = UDim2.new(0, 0, 0, 20),
+			AutomaticSize = Enum.AutomaticSize.X,
+			BackgroundColor3 = Theme.Field,
+			BackgroundTransparency = 0.1,
+			BorderSizePixel = 0,
+			ZIndex = 10,
+		}, Layers)
+		Custom:Round(VLHBadge)
+		Custom:Stroke(VLHBadge, Theme.Border, 0.45, 1)
+		Custom:Create("UIPadding", {
+			PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10),
+		}, VLHBadge)
+		Custom:Label(VLHBadge, {
+			Text = VLH_TierText,
+			TextColor3 = VLH_TierColor,
+			TextSize = 10,
+			Font = Enum.Font.GothamBold,
+			Size = UDim2.new(0, 0, 1, 0),
+			AutomaticSize = Enum.AutomaticSize.X,
+			TextXAlignment = Enum.TextXAlignment.Center,
+			Name = "VLHTierLabel",
+			ZIndex = 11,
+		})
+	end
+
 	local ScrollTab = Custom:Create("ScrollingFrame", {
 		Active = true, BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(0, 0, 0, 0),
 		AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, ScrollBarImageColor3 = Theme.Sub,
 		ScrollBarImageTransparency = 0.55, ScrollingDirection = Enum.ScrollingDirection.Y,
-		Position = SidebarHeroMode and UDim2.new(0, 6, 0, 54) or UDim2.new(0, 6, 0, 10),
-		Size = UDim2.new(1, -12, 1, SidebarHeroMode and -124 or -123), Name = "ScrollTab",
+		Position = UDim2.new(0, 6, 0, SidebarHeroMode and 54 or 113),
+		Size = UDim2.new(1, -12, 1, SidebarHeroMode and -124 or -183), Name = "ScrollTab",
 	}, Side)
 	Custom:Create("UIListLayout", { Padding = UDim.new(0, 9), SortOrder = Enum.SortOrder.LayoutOrder }, ScrollTab)
 	Custom:Create("UIPadding", {
@@ -3196,16 +3234,51 @@ function VlhLibrary:CreateWindow(Config)
 		if #Name <= 3 then return Name end
 		return Name:sub(1, 3) .. "***"
 	end
-	Custom:Label(AvatarFooter, {
+	-- Display name container with marquee scroll
+	local FooterNameClip = Custom:Create("Frame", {
+		BackgroundTransparency = 1, BorderSizePixel = 0, ClipsDescendants = true,
+		Position = UDim2.new(0, 56, 0, 7), Size = UDim2.new(1, -76, 0, 19), Name = "FooterNameClip",
+	}, AvatarFooter)
+	local FooterNameLabel = Custom:Label(FooterNameClip, {
 		Text = Player.DisplayName, TextColor3 = Theme.Text, TextSize = 12,
-		TextTruncate = Enum.TextTruncate.AtEnd, TextYAlignment = Enum.TextYAlignment.Center,
-		Position = UDim2.new(0, 56, 0, 7), Size = UDim2.new(1, -76, 0, 19), Name = "WelcomeLabel",
+		TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center,
+		Position = UDim2.new(0, 0, 0, 0), Size = UDim2.new(1, 0, 1, 0), Name = "WelcomeLabel",
+		AutomaticSize = Enum.AutomaticSize.X,
 	})
 	Custom:Label(AvatarFooter, {
 		Text = "@" .. CensorName(Player.Name), TextColor3 = Theme.Sub, TextSize = 9,
 		TextTruncate = Enum.TextTruncate.AtEnd, TextYAlignment = Enum.TextYAlignment.Center,
 		Position = UDim2.new(0, 56, 0, 28), Size = UDim2.new(1, -76, 0, 16), Name = "WelcomeSubtitle",
 	})
+
+	-- Marquee scroll on footer display name
+	task.spawn(function()
+		while FooterNameClip and FooterNameClip.Parent do
+			task.wait(0.05)
+			if not FooterNameClip.Parent then break end
+			local ClipW = FooterNameClip.AbsoluteSize.X
+			local LabelW = FooterNameLabel.AbsoluteSize.X
+			if LabelW > ClipW + 2 then
+				local StartX = 0
+				local EndX = -(LabelW - ClipW + 8)
+				FooterNameLabel.Position = UDim2.new(0, StartX, 0, 0)
+				task.wait(1.2)
+				local Steps = 60
+				for i = 1, Steps do
+					if not FooterNameClip.Parent then break end
+					local t = i / Steps
+					local x = StartX + (EndX - StartX) * t
+					FooterNameLabel.Position = UDim2.new(0, math.floor(x), 0, 0)
+					task.wait(0.03)
+				end
+				task.wait(0.9)
+				FooterNameLabel.Position = UDim2.new(0, StartX, 0, 0)
+				task.wait(0.4)
+			else
+				task.wait(0.5)
+			end
+		end
+	end)
 
 	task.spawn(function()
 		local ok, url = pcall(function()
@@ -3214,6 +3287,7 @@ function VlhLibrary:CreateWindow(Config)
 		if ok and url then AvatarImage.Image = url end
 	end)
 
+	
 	local ProfileCfg = type(Config.Profile) == "table" and Config.Profile or {}
 	local SupportLink = tostring(ProfileCfg.SupportLink or Config.SupportLink or Config.SupportURL or "")
 	local SupportText = tostring(ProfileCfg.SupportText or Config.SupportText or "Open support link")
@@ -3222,7 +3296,7 @@ function VlhLibrary:CreateWindow(Config)
 
 	local function ProfileNotice(Text, Kind)
 		pcall(function()
-			VlhLibrary:SetNotification({ Type = Kind or "info", Content = tostring(Text), Delay = 3 })
+			Rexxzy_Library:SetNotification({ Type = Kind or "info", Content = tostring(Text), Delay = 3 })
 		end)
 	end
 
@@ -3530,25 +3604,28 @@ function VlhLibrary:CreateWindow(Config)
 
 	local SearchPopup = Custom:Create("Frame", {
 		BackgroundColor3 = Theme.Panel, BackgroundTransparency = 0, BorderSizePixel = 0,
-		ClipsDescendants = true, Position = SidebarHeroMode and UDim2.new(0, 0, 0, 46) or UDim2.new(0, 0, 1, -311), Size = UDim2.new(1, 0, 0, 0),
+		ClipsDescendants = true, Position = UDim2.new(0, 0, 0, SidebarHeroMode and 46 or 104), Size = UDim2.new(1, 0, 0, 0),
 		Visible = false, ZIndex = 20, Name = "SearchPopup",
 	}, Side)
 	Custom:Corner(SearchPopup, 8)
 	Custom:Stroke(SearchPopup, Theme.White, 0.75, 1)
 	Custom:Create("UIListLayout", { Padding = UDim.new(0, 0), SortOrder = Enum.SortOrder.LayoutOrder }, SearchPopup)
 
+	-- Keep the sidebar composition in sync with SetSize and the resize grip.
+	-- Large desktop windows use the elevated brand mark from the reference;
+	-- compact windows return to the compact header inside the navigation panel.
 	local function RefreshSidebarLayout()
 		if Destroyed or not DropShadowHolder.Parent then return end
 		local Width = DropShadowHolder.Size.X.Offset
 		local Height = DropShadowHolder.Size.Y.Offset
 		if Width <= 0 then Width = DropShadowHolder.AbsoluteSize.X end
 		if Height <= 0 then Height = DropShadowHolder.AbsoluteSize.Y end
-		local UseHero = Config.SidebarHeroMode == true and not IsMobileCtx and Width >= 720 and Height >= 500
+		local UseHero = not IsMobileCtx and Width >= 720 and Height >= 500
 		if UseHero == SidebarHeroMode then return end
 		SidebarHeroMode = UseHero
 
-		Side.Position = UDim2.new(0, 8, 0, UseHero and 162 or 86)
-		Side.Size = UDim2.new(0, TabWidth, 1, UseHero and -170 or -94)
+		Side.Position = UDim2.new(0, 8, 0, UseHero and 132 or 56)
+		Side.Size = UDim2.new(0, TabWidth, 1, UseHero and -140 or -64)
 		SidebarBrand.Parent = UseHero and Main or Side
 		SidebarBrand.Position = UseHero and UDim2.new(0, 8, 0, 55) or UDim2.new(0, 10, 0, 8)
 		SidebarBrand.Size = UseHero and UDim2.new(0, TabWidth, 0, 84) or UDim2.new(1, -20, 0, 56)
@@ -3558,11 +3635,10 @@ function VlhLibrary:CreateWindow(Config)
 			SidebarLogo.Instance.Position = UDim2.new(0.5, 0, 0.5, 0)
 			SidebarLogo.Instance.Size = UseHero and UDim2.new(0, 68, 0, 68) or UDim2.new(0, 48, 0, 48)
 		end
-		SidebarBrand.Visible = UseHero
-		SearchBoxContainer.Position = UseHero and UDim2.new(0, 9, 0, 9) or UDim2.new(0, 9, 1, -105)
-		ScrollTab.Position = UseHero and UDim2.new(0, 6, 0, 54) or UDim2.new(0, 6, 0, 10)
-		ScrollTab.Size = UDim2.new(1, -12, 1, UseHero and -124 or -123)
-		SearchPopup.Position = UseHero and UDim2.new(0, 0, 0, 46) or UDim2.new(0, 0, 1, -311)
+		SearchBoxContainer.Position = UDim2.new(0, 9, 0, UseHero and 9 or 67)
+		ScrollTab.Position = UDim2.new(0, 6, 0, UseHero and 54 or 113)
+		ScrollTab.Size = UDim2.new(1, -12, 1, UseHero and -124 or -183)
+		SearchPopup.Position = UDim2.new(0, 0, 0, UseHero and 46 or 104)
 	end
 	Track(DropShadowHolder:GetPropertyChangedSignal("Size"):Connect(function()
 		task.defer(RefreshSidebarLayout)
@@ -3653,8 +3729,8 @@ function VlhLibrary:CreateWindow(Config)
 	local BubbleEnabled = Config.BubbleEnabled ~= false
 	local BubblePlatform = tostring(Config.BubblePlatform or "Both")
 	local BubbleSize = 58
-	local BubbleSrc = VlhLogos.Veloria 
-	local BubblePos = UDim2.new(0.035, 0, 0.72, 0)
+	local BubbleSrc = "VH" 
+	local BubblePos = UDim2.new(0.1021, 0, 0.0743, 0)
 	if type(BubbleCfg) == "table" then
 		BubbleSrc = BubbleCfg.Icon or BubbleCfg.Image or BubbleCfg[1] or BubbleSrc
 		BubbleSize = tonumber(BubbleCfg.Size) or BubbleSize
@@ -3665,7 +3741,7 @@ function VlhLibrary:CreateWindow(Config)
 	local Bubble = Custom:Create("TextButton", {
 		Name = "OpenClose", Text = "", AutoButtonColor = false, BackgroundColor3 = Theme.Black, BorderSizePixel = 0,
 		Position = BubblePos, Size = UDim2.new(0, BubbleSize, 0, BubbleSize), Visible = false,
-	}, VlhGui)
+	}, RexxzyGui)
 	Custom:Round(Bubble)
 	local BubbleStroke = Custom:Stroke(Bubble, Color3.fromRGB(255, 255, 255), 0, 1.5)
 	local BubbleContent = nil
@@ -3680,7 +3756,7 @@ function VlhLibrary:CreateWindow(Config)
 			Size = UDim2.new(0, math.floor(BubbleSize * 0.52), 0, math.floor(BubbleSize * 0.52)), Color = Theme.White, Name = "BubbleIcon",
 		})
 		if not Obj then
-			Obj = Custom:MakeIcon(BubbleContent, VlhLogos.Veloria, {
+			Obj = Custom:MakeIcon(BubbleContent, "hub", {
 				AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
 				Size = UDim2.new(0, math.floor(BubbleSize * 0.52), 0, math.floor(BubbleSize * 0.52)), Color = Theme.White, Name = "BubbleIcon",
 			})
@@ -3693,7 +3769,7 @@ function VlhLibrary:CreateWindow(Config)
 	end
 	ApplyBubble(BubbleSrc)
 	local function ClampBubble()
-		local Scr = VlhGui.AbsoluteSize
+		local Scr = RexxzyGui.AbsoluteSize
 		local Pos, Sz = Bubble.AbsolutePosition, Bubble.AbsoluteSize
 		if Scr.X <= 0 or Scr.Y <= 0 then return end
 		local Dx = math.clamp(Pos.X, 0, math.max(Scr.X - Sz.X, 0)) - Pos.X
@@ -3737,14 +3813,10 @@ function VlhLibrary:CreateWindow(Config)
 		if State then
 			Bubble.Visible = false
 			DropShadowHolder.Visible = true
-			Custom:Tween(WindowScale, 0.3, { Scale = Base }, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+			WindowScale.Scale = Base
 		else
-			Custom:Tween(WindowScale, 0.15, { Scale = Base * 0.9 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-			task.delay(0.15, function()
-				if Destroyed or Opened then return end
-				DropShadowHolder.Visible = false
-				Bubble.Visible = ShouldShowBubble()
-			end)
+			DropShadowHolder.Visible = false
+			Bubble.Visible = ShouldShowBubble()
 		end
 	end
 
@@ -3840,11 +3912,11 @@ function VlhLibrary:CreateWindow(Config)
 	local function Cleanup()
 		if Destroyed then return end
 		Destroyed = true
-		VlhLibrary.Unloaded = true
+		Rexxzy_Library.Unloaded = true
 		for _, c in ipairs(Conns) do pcall(function() c:Disconnect() end) end
 		ClearDeveloperTags()
 		for _, t in ipairs(Loops) do pcall(function() t:Cancel() end) end
-		pcall(function() VlhGui:Destroy() end)
+		pcall(function() RexxzyGui:Destroy() end)
 	end
 
 	CancelButton.Activated:Connect(function()
@@ -3866,9 +3938,7 @@ function VlhLibrary:CreateWindow(Config)
 	function Funcs:Destroy() Cleanup() end
 	function Funcs:Toggle() SetOpen(not Opened) end
 	function Funcs:SetOpen(State) SetOpen(State == true) end
-	function Funcs:Minimize() SetOpen(false) end
-	function Funcs:Restore() SetOpen(true) end
-	Funcs.Gui = VlhGui
+	Funcs.Gui = RexxzyGui
 	function Funcs:SetKeybind(NewKey)
 		if type(NewKey) == "string" then NewKey = Enum.KeyCode[NewKey] end
 		if typeof(NewKey) ~= "EnumItem" or NewKey.EnumType ~= Enum.KeyCode then return false end
@@ -3985,7 +4055,7 @@ function VlhLibrary:CreateWindow(Config)
 	function Funcs:SetScale(NewScale)
 		Base = math.clamp(tonumber(NewScale) or Base, 0.5, 1.5)
 		if MobileLayout then RefreshMobileLayout() end
-		if Opened and not Destroyed then Custom:Tween(WindowScale, 0.2, { Scale = Base }) end
+		if Opened and not Destroyed then WindowScale.Scale = Base end
 	end
 
 	function Funcs:SetSize(NewSize)
@@ -4026,7 +4096,7 @@ function VlhLibrary:CreateWindow(Config)
 			Resizing = true
 			ResizeStart = Input.Position
 			local Current = DropShadowHolder.Size
-			local ScreenSize = VlhGui.AbsoluteSize
+			local ScreenSize = RexxzyGui.AbsoluteSize
 			ResizeStartSize = Vector2.new(
 				Current.X.Scale * ScreenSize.X + Current.X.Offset,
 				Current.Y.Scale * ScreenSize.Y + Current.Y.Offset
@@ -4039,7 +4109,7 @@ function VlhLibrary:CreateWindow(Config)
 		if Input.UserInputType ~= Enum.UserInputType.MouseMovement and Input.UserInputType ~= Enum.UserInputType.Touch then return end
 		local Delta = Input.Position - ResizeStart
 		local ScaleNow = math.max(WindowScale.Scale, 0.1)
-		local Screen = VlhGui.AbsoluteSize
+		local Screen = RexxzyGui.AbsoluteSize
 		local MaxW = math.max(1, math.floor(Screen.X * 0.94 / ScaleNow))
 		local MaxH = math.max(1, math.floor(Screen.Y * 0.90 / ScaleNow))
 		local MinW, MinH = math.min(360, MaxW), math.min(220, MaxH)
@@ -4424,11 +4494,7 @@ function VlhLibrary:CreateWindow(Config)
 		})
 	end
 
-	function Funcs:SetIcon(Src)
-		ApplySidebarLogo(Src)
-		if HeaderLogo then HeaderLogo.Image = tostring(type(Src) == "string" and (VlhLogos[Src] or Src) or VlhLogos.Veloria) end
-		return true
-	end
+	function Funcs:SetIcon(Src) ApplySidebarLogo(Src) end
 	function Funcs:SetBackground(Src, Opts) return ApplyBackground(Src, Opts) end
 	function Funcs:ClearBackground() ApplyBackground(nil) end
 	function Funcs:OpenProfile() OpenProfile() end
@@ -4556,6 +4622,7 @@ function VlhLibrary:CreateWindow(Config)
 			if type(SectionConfig) == "string" then SectionConfig = { SectionConfig } end
 			local SectionName = SectionConfig[1] or SectionConfig.Name or SectionConfig.Title or "Section"
 
+			-- Section title sits above the content card, matching the reference layout.
 			local SectionFrame = Custom:Create("Frame", {
 				BackgroundTransparency = 1, BorderSizePixel = 0,
 				AutomaticSize = Enum.AutomaticSize.Y, Size = UDim2.new(1, 0, 0, 0),
@@ -4649,7 +4716,7 @@ function VlhLibrary:CreateWindow(Config)
 				Custom:Corner(Tile, 8)
 				Custom:Stroke(Tile, Theme.Border, 0.4, 1)
 				local IconObj = nil
-				
+				-- AddButton keeps its icon as a direct child for public UI inspection compatibility.
 				if IconName ~= "BtnTileIcon" then
 					IconObj = Custom:MakeIcon(Tile, Source or "paw", {
 						AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -4694,7 +4761,7 @@ function VlhLibrary:CreateWindow(Config)
 				else
 					BtnLabel.Size = UDim2.new(1, HasLeading and -78 or -32, 1, 0)
 				end
-				
+				-- Keep the icon as a direct Btn child so existing icon-inspection code remains compatible.
 				local BtnIconObj = nil
 				if HasLeading then
 					BtnIconObj = Custom:MakeIcon(Btn, BtnIconSrc, {
@@ -5588,7 +5655,7 @@ function VlhLibrary:CreateWindow(Config)
 					local ok = pcall(function() game:GetService("GuiService"):OpenBrowserWindow(SocialUrl) end)
 					if not ok and setclipboard then
 						pcall(setclipboard, SocialUrl)
-						VlhLibrary:SetNotification({ Content = "Link copied: " .. SocialUrl })
+						Rexxzy_Library:SetNotification({ Content = "Link copied: " .. SocialUrl })
 					end
 				end)
 				RegisterSearch(SocialName, SF, Where, SelectTab, EnsureOpen, TabFrame)
@@ -5618,9 +5685,9 @@ function VlhLibrary:CreateWindow(Config)
 					CircleClick(CopyBtn)
 					if setclipboard then
 						pcall(setclipboard, CopyText)
-						VlhLibrary:SetNotification({ Content = "Copied: " .. CopyText })
+						Rexxzy_Library:SetNotification({ Content = "Copied: " .. CopyText })
 					else
-						VlhLibrary:SetNotification({ Content = "Clipboard is not supported by your executor" })
+						Rexxzy_Library:SetNotification({ Content = "Clipboard is not supported by your executor" })
 					end
 				end)
 				Custom:Hover(CF, CStroke)
@@ -5732,6 +5799,7 @@ function VlhLibrary:CreateWindow(Config)
 				Place(LF)
 				LF.AutomaticSize = Enum.AutomaticSize.Y
 
+				
 				Custom:Create("UIPadding", {
 					PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8),
 					PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10),
@@ -5902,7 +5970,7 @@ function VlhLibrary:CreateWindow(Config)
 				if type(CMConfig) == "string" then CMConfig = { CMConfig } end
 				CMConfig = CMConfig or {}
 				local CMName = CMConfig[1] or CMConfig.Name or "Configs"
-				local Library = VlhLibrary
+				local Library = Rexxzy_Library
 				local Holder = Custom:Create("Frame", {
 					BackgroundTransparency = 1, BorderSizePixel = 0, AutomaticSize = Enum.AutomaticSize.Y,
 					Size = UDim2.new(1, 0, 0, 0), Name = CMName .. "ConfigManager",
@@ -6115,7 +6183,7 @@ function VlhLibrary:CreateWindow(Config)
 						for K, V in pairs(Cfg) do Copy[K] = V end
 						local Orig = Cfg[CbIdx] or Cfg.Callback or function() end
 						local Wrapped = function(...)
-							VlhLibrary:MarkDirty()
+							Rexxzy_Library:MarkDirty()
 							return Orig(...)
 						end
 						Copy[CbIdx] = Wrapped
@@ -6128,8 +6196,8 @@ function VlhLibrary:CreateWindow(Config)
 					Result.SetVisible = function(State) if Frame and Frame.Parent then Frame.Visible = State and true or false end end
 					local FlagName = type(Cfg) == "table" and Cfg.Flag or nil
 					Result.Destroy = function()
-						if FlagName and VlhLibrary.Elements[FlagName] and VlhLibrary.Elements[FlagName].Owner == Result then
-							VlhLibrary.Elements[FlagName] = nil
+						if FlagName and Rexxzy_Library.Elements[FlagName] and Rexxzy_Library.Elements[FlagName].Owner == Result then
+							Rexxzy_Library.Elements[FlagName] = nil
 						end
 						if Frame and Frame.Parent then Frame:Destroy() end
 					end
@@ -6149,7 +6217,7 @@ function VlhLibrary:CreateWindow(Config)
 								return ok and Key or nil
 							end
 						end
-						VlhLibrary.Elements[tostring(FlagName)] = {
+						Rexxzy_Library.Elements[tostring(FlagName)] = {
 							Owner = Result, Get = Result.Get, Set = Result.Set, Encode = Codec[1], Decode = Decode,
 						}
 					end
@@ -6160,126 +6228,30 @@ function VlhLibrary:CreateWindow(Config)
 			function SecFuncs:SetOpen(State) SetSectionOpen(State == true, true) end
 			function SecFuncs:SetTitle(NewTitle) HeaderLabel.Text = tostring(NewTitle) end
 
-			SecFuncs.VlhButton = SecFuncs.AddButton
-			SecFuncs.VlhToggle = SecFuncs.AddToggle
-			SecFuncs.VlhSwitch = SecFuncs.AddToggle
-			SecFuncs.VlhSlider = SecFuncs.AddSlider
-			SecFuncs.VlhTextbox = SecFuncs.AddInput
-			SecFuncs.VlhInput = SecFuncs.AddInput
-			SecFuncs.VlhDropdown = SecFuncs.AddDropdown
-			SecFuncs.VlhMultiDropdown = SecFuncs.AddMultiDropdown
-			SecFuncs.VlhSearchableDropdown = SecFuncs.AddSearchableDropdown
-			SecFuncs.VlhMultiTextbox = SecFuncs.AddMultiInput
-			SecFuncs.VlhKeybind = SecFuncs.AddKeybind
-			SecFuncs.VlhParagraph = SecFuncs.AddParagraph
-			SecFuncs.VlhReadMe = SecFuncs.AddReadMe
-			SecFuncs.VlhSeparator = SecFuncs.AddSeparator
-			SecFuncs.VlhLine = SecFuncs.AddLine
-			SecFuncs.VlhSocial = SecFuncs.AddSocial
-			SecFuncs.VlhCopyGroup = SecFuncs.AddCopyGroup
-			SecFuncs.VlhColorPicker = SecFuncs.AddColorPicker
-			SecFuncs.VlhLabel = SecFuncs.AddLabel
-			SecFuncs.VlhProgress = SecFuncs.AddProgress
-			SecFuncs.VlhConfigManager = SecFuncs.AddConfigManager
-			SecFuncs.VlhSetOpen = SecFuncs.SetOpen
-			SecFuncs.VlhSetTitle = SecFuncs.SetTitle
-
 			return SecFuncs
 		end
-
-		TabFuncs.VlhSection = TabFuncs.AddSection
-		TabFuncs.VlhSelect = TabFuncs.Select
 
 		return TabFuncs
 	end
 
-	local SplashEnabled = Config.Splash ~= false
-	local SplashDuration = math.clamp(tonumber(Config.SplashDuration) or 0.95, 0.35, 3)
-	if SplashEnabled then
-		DropShadowHolder.Visible = false
-		WindowScale.Scale = Base * 0.88
-		local SplashGui = Custom:Create("ScreenGui", {
-			Name = "VlhSplash", ZIndexBehavior = Enum.ZIndexBehavior.Sibling, ResetOnSpawn = false,
-			IgnoreGuiInset = true, DisplayOrder = 200,
-		}, Custom:GetGuiParent())
-		local SplashBg = Custom:Create("Frame", {
-			BackgroundColor3 = Theme.Black, BackgroundTransparency = 0, BorderSizePixel = 0,
-			Size = UDim2.new(1, 0, 1, 0), Name = "SplashBg",
-		}, SplashGui)
-		local LogoHold = Custom:Create("Frame", {
-			AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, BorderSizePixel = 0,
-			Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(0, 96, 0, 96), Name = "LogoHold",
-		}, SplashBg)
-		local SplashScale = Custom:Create("UIScale", { Scale = 0.82 }, LogoHold)
-		local LogoImg = Custom:Create("ImageLabel", {
-			BackgroundTransparency = 1, BorderSizePixel = 0, Size = UDim2.new(1, 0, 1, 0),
-			Image = VlhLogos.Veloria,
-			ImageTransparency = 1, ScaleType = Enum.ScaleType.Fit, Name = "VHLogo",
-		}, LogoHold)
-		local Brand = Custom:Label(SplashBg, {
-			Text = tostring(Config.SplashText or Title or "VH"),
-			TextColor3 = Theme.Text, TextSize = 14, TextTransparency = 1,
-			TextXAlignment = Enum.TextXAlignment.Center,
-			AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0.5, 58),
-			Size = UDim2.new(0, 220, 0, 22), Name = "SplashBrand",
-		})
-		task.spawn(function()
-			Custom:Tween(LogoImg, 0.35, { ImageTransparency = 0 })
-			Custom:Tween(Brand, 0.35, { TextTransparency = 0.15 })
-			Custom:Tween(SplashScale, 0.45, { Scale = 1 }, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-			task.wait(SplashDuration)
-			if Destroyed then
-				pcall(function() SplashGui:Destroy() end)
-				return
-			end
-			Custom:Tween(LogoImg, 0.28, { ImageTransparency = 1 })
-			Custom:Tween(Brand, 0.28, { TextTransparency = 1 })
-			Custom:Tween(SplashBg, 0.3, { BackgroundTransparency = 1 })
-			task.wait(0.32)
-			pcall(function() SplashGui:Destroy() end)
-			if Destroyed then return end
-			DropShadowHolder.Visible = true
-			Custom:Tween(WindowScale, 0.4, { Scale = Base }, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-		end)
-	else
-		Custom:Tween(WindowScale, 0.4, { Scale = Base }, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-	end
+	
+	-- Intro dan animasi open dihapus; window langsung muncul
+	DropShadowHolder.Visible = true
+	WindowScale.Scale = Base
 
-	task.delay(3 + (SplashEnabled and SplashDuration or 0), function()
-		if not VlhLibrary.AutoLoading then VlhLibrary.Armed = true end
+	task.delay(3, function()
+		if not Rexxzy_Library.AutoLoading then Rexxzy_Library.Armed = true end
 	end)
-
-	Funcs.VlhTab = Funcs.AddTab
-	Funcs.VlhSelectTab = Funcs.SelectTab
-	Funcs.VlhToggleWindow = Funcs.Toggle
-	Funcs.VlhMinimize = Funcs.Minimize
-	Funcs.VlhRestore = Funcs.Restore
-	Funcs.VlhDestroy = Funcs.Destroy
-	Funcs.VlhSetOpen = Funcs.SetOpen
-	Funcs.VlhSetKeybind = Funcs.SetKeybind
-	Funcs.VlhSetIcon = Funcs.SetIcon
-	Funcs.VlhSetBubbleIcon = Funcs.SetBubbleIcon
-	Funcs.VlhSetBubblePlatform = Funcs.SetBubblePlatform
-	Funcs.VlhSetSize = Funcs.SetSize
-	Funcs.VlhSetScale = Funcs.SetScale
-	Funcs.VlhSetResizable = Funcs.SetResizable
-	Funcs.VlhDialog = Funcs.Dialog
-	Funcs.VlhColorPicker = Funcs.ColorPicker
-	Funcs.VlhSetBackground = Funcs.SetBackground
-	Funcs.VlhClearBackground = Funcs.ClearBackground
-	Funcs.VlhOpenProfile = Funcs.OpenProfile
-	Funcs.VlhCloseProfile = Funcs.CloseProfile
-	Funcs.VlhSetSupportLink = Funcs.SetSupportLink
-	Funcs.VlhSetBackgroundTransparency = Funcs.SetBackgroundTransparency
-	Funcs.VlhAddTabDivider = Funcs.AddTabDivider
-	Funcs.VlhSetTitle = Funcs.SetTitle
-	Funcs.VlhSetDescription = Funcs.SetDescription
-	Funcs.VlhTags = Funcs.Tags
-	function Funcs:VlhNotify(Config) return VlhLibrary:Notify(Config) end
 
 	return Funcs
 end
 
+--[[
+KEY SYSTEM TEMPLATE MODULE
+- UI and interaction logic are implemented below.
+- No real API, key provider, Discord invite, or key is pre-configured.
+- Fill your own values in KeySystem_Config_Template.lua.
+]]
 local KeySys = {}
 
 function KeySys.IsDict(T)
@@ -6300,6 +6272,8 @@ function KeySys.Merge(Base, User)
 	return Out
 end
 
+-- GENERIC PROVIDER PRESETS
+-- Replace the names, links, callbacks, and appearance in your own config.
 KeySys.ProviderPresets = {
 	free = {
 		Name = "YOUR_FREE_PROVIDER_NAME", Type = "Free", Logo = "key",
@@ -6634,7 +6608,7 @@ function KeySys.WithProvider(Context, Provider)
 	return Copy
 end
 
-function VlhLibrary:CreateKeySystem(UserConfig)
+function Rexxzy_Library:CreateKeySystem(UserConfig)
 	local Cfg = KeySys.Merge(KeySys.Defaults(), UserConfig)
 	if type(Cfg.Key) == "boolean" then
 		Cfg.Authentication.API.Enabled = Cfg.Key
@@ -6660,12 +6634,12 @@ function VlhLibrary:CreateKeySystem(UserConfig)
 	local Intro = true
 	local TargetScale = 1
 
-	if Behavior.ReplaceExisting ~= false and VlhLibrary.ActiveKeySystem then
-		local Old = VlhLibrary.ActiveKeySystem
-		VlhLibrary.ActiveKeySystem = nil
+	if Behavior.ReplaceExisting ~= false and Rexxzy_Library.ActiveKeySystem then
+		local Old = Rexxzy_Library.ActiveKeySystem
+		Rexxzy_Library.ActiveKeySystem = nil
 		pcall(function() Old:Destroy(true) end)
 	end
-	VlhLibrary.ActiveKeySystem = Self
+	Rexxzy_Library.ActiveKeySystem = Self
 
 	local function Dead() return Destroyed or Closing end
 	local function Track(C) table.insert(Conns, C) return C end
@@ -6708,7 +6682,7 @@ function VlhLibrary:CreateKeySystem(UserConfig)
 
 	local function Notify(Kind, Text)
 		if Behavior.Notifications == false or not Text or Text == "" then return end
-		VlhLibrary:SetNotification({ Type = Kind, Content = tostring(Text), Delay = tonumber(Behavior.NotificationDelay) or 3 })
+		Rexxzy_Library:SetNotification({ Type = Kind, Content = tostring(Text), Delay = tonumber(Behavior.NotificationDelay) or 3 })
 	end
 
 	local ApiOn = type(API) == "table" and API.Enabled == true
@@ -7614,7 +7588,7 @@ function VlhLibrary:CreateKeySystem(UserConfig)
 		for _, T in pairs(Spinners) do pcall(function() T:Cancel() end) end
 		table.clear(Spinners)
 		pcall(function() Gui:Destroy() end)
-		if VlhLibrary.ActiveKeySystem == Self then VlhLibrary.ActiveKeySystem = nil end
+		if Rexxzy_Library.ActiveKeySystem == Self then Rexxzy_Library.ActiveKeySystem = nil end
 	end
 
 	function Self:Destroy(Instant)
@@ -7778,15 +7752,8 @@ function VlhLibrary:CreateKeySystem(UserConfig)
 		task.wait()
 		if Destroyed then return end
 		ApplyFit()
-		if AnimOn then
-			UIScaleObj.Scale = TargetScale * 0.92
-			Anim(Backdrop, 0.25, { BackgroundTransparency = BackdropGoal })
-			local Tw = Anim(UIScaleObj, 0.28, { Scale = TargetScale }, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-			if Tw then Tw.Completed:Wait() end
-		else
-			UIScaleObj.Scale = TargetScale
-			Backdrop.BackgroundTransparency = BackdropGoal
-		end
+		UIScaleObj.Scale = TargetScale
+		Backdrop.BackgroundTransparency = BackdropGoal
 		if Destroyed then return end
 		Intro = false
 		ApplyFit()
@@ -7806,7 +7773,7 @@ function VlhLibrary:CreateKeySystem(UserConfig)
 	return Self
 end
 
-function VlhLibrary:CreateKaitunGui(UserConfig)
+function Rexxzy_Library:CreateKaitunGui(UserConfig)
 	UserConfig = type(UserConfig) == "table" and UserConfig or {}
 
 	local function Col(V, D)
@@ -7816,7 +7783,7 @@ function VlhLibrary:CreateKaitunGui(UserConfig)
 	local Cfg = {
 		Title = UserConfig.Title or UserConfig[1] or "Kaitun Auto Farm",
 		Status = UserConfig.Status or UserConfig[2] or "Waiting for teleport...",
-		Logo = UserConfig.Logo or UserConfig.Icon or VlhLogos.Veloria or VlhLogos.VH or "rbxassetid://131946786209484",
+		Logo = UserConfig.Logo or UserConfig.Icon or RexxzyLogos.Veloria or RexxzyLogos.VH or "rbxassetid://131946786209484",
 		LogoSize = math.clamp(tonumber(UserConfig.LogoSize) or 86, 40, 180),
 		Subtitle = UserConfig.Subtitle or "",
 
@@ -7852,7 +7819,7 @@ function VlhLibrary:CreateKaitunGui(UserConfig)
 		ZIndexBehavior = UserConfig.ZIndexBehavior or Enum.ZIndexBehavior.Sibling,
 		Animations = UserConfig.Animations ~= false,
 		CloseOnClick = UserConfig.CloseOnClick == true,
-		Name = tostring(UserConfig.Name or "VlhKaitunGui"),
+		Name = tostring(UserConfig.Name or "RexxzyKaitunGui"),
 	}
 
 	if type(Cfg.Timer) ~= "table" then
@@ -8221,28 +8188,13 @@ function VlhLibrary:CreateKaitunGui(UserConfig)
 		if Dead() then return end
 		Gui.Enabled = true
 		Root.Visible = true
-		if Cfg.Animations then
-			Root.BackgroundTransparency = 1
-			LogoScale.Scale = 0.88
-			Anim(Root, 0.32, { BackgroundTransparency = Cfg.BackgroundTransparency })
-			Anim(LogoScale, 0.4, { Scale = 1 }, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-		else
-			Root.BackgroundTransparency = Cfg.BackgroundTransparency
-			LogoScale.Scale = 1
-		end
+		Root.BackgroundTransparency = Cfg.BackgroundTransparency
+		LogoScale.Scale = 1
 	end
 
 	function Self:Hide()
 		if Dead() then return end
-		if Cfg.Animations then
-			Anim(Root, 0.25, { BackgroundTransparency = 1 })
-			Anim(LogoScale, 0.2, { Scale = 0.9 })
-			task.delay(0.28, function()
-				if not Dead() then Root.Visible = false end
-			end)
-		else
-			Root.Visible = false
-		end
+		Root.Visible = false
 	end
 
 	function Self:Destroy(Instant)
@@ -8255,17 +8207,11 @@ function VlhLibrary:CreateKaitunGui(UserConfig)
 			for _, C in ipairs(Conns) do pcall(function() C:Disconnect() end) end
 			for _, T in ipairs(Tweens) do pcall(function() T:Cancel() end) end
 			pcall(function() Gui:Destroy() end)
-			if VlhLibrary.ActiveKaitunGui == Self then
-				VlhLibrary.ActiveKaitunGui = nil
+			if Rexxzy_Library.ActiveKaitunGui == Self then
+				Rexxzy_Library.ActiveKaitunGui = nil
 			end
 		end
-		if Instant == true or not Cfg.Animations then
-			Teardown()
-		else
-			Anim(Root, 0.22, { BackgroundTransparency = 1 })
-			Anim(LogoScale, 0.18, { Scale = 0.88 })
-			task.delay(0.26, Teardown)
-		end
+		Teardown()
 	end
 
 	function Self:IsDestroyed()
@@ -8318,10 +8264,10 @@ function VlhLibrary:CreateKaitunGui(UserConfig)
 		end))
 	end
 
-	if VlhLibrary.ActiveKaitunGui and VlhLibrary.ActiveKaitunGui ~= Self then
-		pcall(function() VlhLibrary.ActiveKaitunGui:Destroy(true) end)
+	if Rexxzy_Library.ActiveKaitunGui and Rexxzy_Library.ActiveKaitunGui ~= Self then
+		pcall(function() Rexxzy_Library.ActiveKaitunGui:Destroy(true) end)
 	end
-	VlhLibrary.ActiveKaitunGui = Self
+	Rexxzy_Library.ActiveKaitunGui = Self
 
 	task.defer(function()
 		if Dead() then return end
@@ -8334,36 +8280,8 @@ function VlhLibrary:CreateKaitunGui(UserConfig)
 	return Self
 end
 
-function VlhLibrary:VlhCreateWindow(Config)
-	return self:CreateWindow(Config)
-end
-
-function VlhLibrary:VlhNotify(Config)
-	return self:Notify(Config)
-end
-
-function VlhLibrary:VlhNotifySuccess(Content, Title)
-	return self:NotifySuccess(Content, Title)
-end
-
-function VlhLibrary:VlhNotifyError(Content, Title)
-	return self:NotifyError(Content, Title)
-end
-
-function VlhLibrary:VlhNotifyWarning(Content, Title)
-	return self:NotifyWarning(Content, Title)
-end
-
-function VlhLibrary:VlhNotifyInfo(Content, Title)
-	return self:NotifyInfo(Content, Title)
-end
-
-local VlhAPI = {
-	VlhLibrary = VlhLibrary,
-	VlhWebhook = VlhWebhook,
-	VlhLogos = VlhLogos,
-	VlhCreateWindow = function(Config) return VlhLibrary:CreateWindow(Config) end,
-	VlhGetLogo = function(Name) return VlhLibrary:GetLogo(Name) end,
+return {
+	Library = Rexxzy_Library,
+	Webhook = RexxzyWebhook,
+	Logos = RexxzyLogos,
 }
-
-return VlhAPI
