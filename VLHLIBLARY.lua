@@ -1,4 +1,4 @@
--- Just Indicator Is Update Or No ABCDEFGHSHSHSHSHSHSHEHEHDHDH
+-- Just Indicator Is Update Or No ABCDEFG
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -337,22 +337,22 @@ function RexxzyWebhook:AttachToLibrary(lib, configNameOrObj)
 end
 
 local Theme = {
-	-- Clean monochrome palette inspired by the KittenHub reference.
+	-- Pure dark palette matching the Stealth-X / reference screenshots.
 	Accent = Color3.fromRGB(245, 245, 247),
-	AccentSoft = Color3.fromRGB(194, 194, 199),
-	Dark = Color3.fromRGB(4, 4, 5),
-	Panel = Color3.fromRGB(9, 9, 11),
-	Field = Color3.fromRGB(17, 17, 20),
-	Text = Color3.fromRGB(245, 245, 247),
-	Sub = Color3.fromRGB(155, 155, 162),
-	Off = Color3.fromRGB(36, 36, 41),
-	Hover = Color3.fromRGB(25, 25, 29),
-	Selected = Color3.fromRGB(31, 31, 36),
-	Border = Color3.fromRGB(76, 76, 83),
-	Red = Color3.fromRGB(54, 54, 60),
-	RedHover = Color3.fromRGB(76, 76, 83),
-	White = Color3.fromRGB(238, 238, 242),
-	Black = Color3.fromRGB(5, 5, 7),
+	AccentSoft = Color3.fromRGB(180, 180, 185),
+	Dark = Color3.fromRGB(0, 0, 0),
+	Panel = Color3.fromRGB(12, 12, 14),
+	Field = Color3.fromRGB(20, 20, 23),
+	Text = Color3.fromRGB(240, 240, 245),
+	Sub = Color3.fromRGB(150, 150, 155),
+	Off = Color3.fromRGB(32, 32, 36),
+	Hover = Color3.fromRGB(28, 28, 32),
+	Selected = Color3.fromRGB(35, 35, 40),
+	Border = Color3.fromRGB(55, 55, 60),
+	Red = Color3.fromRGB(50, 50, 55),
+	RedHover = Color3.fromRGB(70, 70, 75),
+	White = Color3.fromRGB(235, 235, 240),
+	Black = Color3.fromRGB(8, 8, 10),
 }
 
 local Custom = {}
@@ -372,9 +372,9 @@ do
 		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255)),
 	})
 	Custom.GradientWindow = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(9, 11, 15)),
-		ColorSequenceKeypoint.new(0.55, Color3.fromRGB(11, 13, 17)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(16, 18, 23)),
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(8, 8, 10)),
+		ColorSequenceKeypoint.new(0.5, Color3.fromRGB(10, 10, 12)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 12, 14)),
 	})
 	Custom.GradientLine = ColorSequence.new({
 		ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
@@ -2796,7 +2796,87 @@ function Rexxzy_Library:CreateWindow(Config)
 	Custom:Corner(Main, 14)
 	Custom:AddGradient(Main, 125, Custom.GradientWindow)
 	local MainStroke = Custom:Stroke(Main, Theme.Border, 0.58, 1.1)
-	
+
+	-- Full bottom status bar matching the photo:
+	-- Left: avatar + "Welcome, Anonymous"   |   Center: Free V1 / Premium v0.001   |   Right: FPS
+	local VersionText = tostring(Config.Version or Config.AccessTier or "Free V1")
+	if string.lower(VersionText) == "premium" then VersionText = "Premium v0.001" end
+	if string.lower(VersionText) == "free" then VersionText = "Free V1" end
+
+	local BottomBar = Custom:Create("Frame", {
+		AnchorPoint = Vector2.new(0, 1), BackgroundColor3 = Theme.Panel, BackgroundTransparency = 0.15,
+		BorderSizePixel = 0, Position = UDim2.new(0, 0, 1, 0), Size = UDim2.new(1, 0, 0, 32),
+		ZIndex = 8, Name = "BottomBar",
+	}, Main)
+
+	local BottomAvatar = Custom:Create("ImageLabel", {
+		Image = "rbxasset://textures/ui/GuiImagePlaceholder.png",
+		AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Theme.Field, BorderSizePixel = 0,
+		Position = UDim2.new(0, 12, 0.5, 0), Size = UDim2.new(0, 22, 0, 22), Name = "BottomAvatar",
+	}, BottomBar)
+	Custom:Round(BottomAvatar)
+	Custom:Stroke(BottomAvatar, Theme.Border, 0.4, 1)
+
+	local WelcomeText = Custom:Label(BottomBar, {
+		Text = "Welcome, " .. (Player.DisplayName or "Anonymous"),
+		TextColor3 = Theme.Text, TextSize = 12, Font = Enum.Font.Gotham,
+		TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		Position = UDim2.new(0, 42, 0, 0), Size = UDim2.new(0, 180, 1, 0), Name = "WelcomeText",
+	})
+
+	local VersionLabel = Custom:Label(BottomBar, {
+		Text = VersionText, TextColor3 = Theme.Sub, TextSize = 11, Font = Enum.Font.GothamMedium,
+		TextXAlignment = Enum.TextXAlignment.Center, TextYAlignment = Enum.TextYAlignment.Center,
+		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
+		Size = UDim2.new(0, 140, 0, 18), Name = "VersionLabel",
+	})
+
+	local FpsLabel = Custom:Label(BottomBar, {
+		Text = "60 FPS", TextColor3 = Theme.Sub, TextSize = 11, Font = Enum.Font.GothamMedium,
+		TextXAlignment = Enum.TextXAlignment.Right, TextYAlignment = Enum.TextYAlignment.Center,
+		AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -14, 0.5, 0),
+		Size = UDim2.new(0, 64, 0, 18), Name = "FpsLabel",
+	})
+
+	task.spawn(function()
+		local ok, url = pcall(function()
+			return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+		end)
+		if ok and url then BottomAvatar.Image = url end
+	end)
+
+	-- Simple FPS counter
+	task.spawn(function()
+		local last = tick()
+		local frames = 0
+		local conn
+		conn = RunService.RenderStepped:Connect(function()
+			if Destroyed then if conn then conn:Disconnect() end return end
+			frames = frames + 1
+			local now = tick()
+			if now - last >= 0.5 then
+				local fps = math.floor(frames / (now - last) + 0.5)
+				FpsLabel.Text = tostring(fps) .. " FPS"
+				frames = 0
+				last = now
+			end
+		end)
+		table.insert(Conns, conn)
+	end)
+
+	function Funcs:SetVersion(Text)
+		VersionText = tostring(Text or VersionText)
+		if VersionLabel and VersionLabel.Parent then VersionLabel.Text = VersionText end
+	end
+	function Funcs:GetVersion()
+		return VersionText
+	end
+	function Funcs:SetWelcome(Text)
+		if WelcomeText and WelcomeText.Parent then
+			WelcomeText.Text = tostring(Text or ("Welcome, " .. (Player.DisplayName or "Anonymous")))
+		end
+	end
 
 	local function RefreshMobileLayout()
 		if not MobileLayout or Destroyed or not DropShadowHolder.Parent then return end
@@ -3051,36 +3131,36 @@ function Rexxzy_Library:CreateWindow(Config)
 		for _, TagText in ipairs(Config.Tags or Config[7]) do TagsFuncs:Add(TagText) end
 	end
 
-	-- On larger desktop windows, lift the brand mark above the sidebar so the
-	-- navigation panel begins beneath it, like the supplied reference image.
-	local SidebarHeroMode = not IsMobileCtx and (SizeUi.X.Offset >= 720) and (SizeUi.Y.Offset >= 500)
-	local SidebarTop = SidebarHeroMode and 132 or 56
-	local SidebarBottom = SidebarHeroMode and 140 or 64
+	-- Compact layout matching the reference screenshots (Stealth-X style).
+	-- No elevated hero logo. Sidebar starts under top bar, room left for bottom status bar.
+	local SidebarHeroMode = false
+	local SidebarTop = 52
+	local SidebarBottom = 40
 	local Side = Custom:Create("Frame", {
 		BackgroundColor3 = Theme.Panel, BackgroundTransparency = 0, BorderSizePixel = 0,
 		ClipsDescendants = true, Position = UDim2.new(0, 8, 0, SidebarTop),
 		Size = UDim2.new(0, TabWidth, 1, -SidebarBottom), Name = "LayersTab",
 	}, Main)
-	Custom:Corner(Side, 14)
-	Custom:Stroke(Side, Theme.Border, 0.48, 1)
+	Custom:Corner(Side, 12)
+	Custom:Stroke(Side, Theme.Border, 0.55, 1)
 
 	local SidebarBrand = Custom:Create("Frame", {
 		BackgroundTransparency = 1, BorderSizePixel = 0,
-		Position = SidebarHeroMode and UDim2.new(0, 8, 0, 55) or UDim2.new(0, 10, 0, 8),
-		Size = SidebarHeroMode and UDim2.new(0, TabWidth, 0, 84) or UDim2.new(1, -20, 0, 56),
+		Position = UDim2.new(0, 10, 0, 8),
+		Size = UDim2.new(1, -20, 0, 48),
 		Name = "SidebarBrand",
-	}, SidebarHeroMode and Main or Side)
+	}, Side)
 	local SidebarLogoTile = Custom:Create("Frame", {
 		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
-		Size = SidebarHeroMode and UDim2.new(0, 76, 0, 76) or UDim2.new(0, 56, 0, 56),
+		Size = UDim2.new(0, 42, 0, 42),
 		BackgroundColor3 = Theme.Field, BackgroundTransparency = 0, BorderSizePixel = 0,
 		Name = "SidebarLogoTile",
 	}, SidebarBrand)
-	Custom:Corner(SidebarLogoTile, 11)
+	Custom:Corner(SidebarLogoTile, 9)
 	Custom:Stroke(SidebarLogoTile, Theme.Border, 0.55, 1)
 	local SidebarIconProps = {
 		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
-		Size = SidebarHeroMode and UDim2.new(0, 68, 0, 68) or UDim2.new(0, 48, 0, 48),
+		Size = UDim2.new(0, 34, 0, 34),
 		Color = Theme.White, Name = "SidebarLogo",
 	}
 	local SidebarLogo = Custom:MakeIcon(SidebarLogoTile, Icon, SidebarIconProps)
@@ -3095,26 +3175,27 @@ function Rexxzy_Library:CreateWindow(Config)
 		if SidebarLogo then pcall(function() SidebarLogo:Destroy() end) end
 		local Props = {
 			AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
-			Size = SidebarHeroMode and UDim2.new(0, 68, 0, 68) or UDim2.new(0, 48, 0, 48),
+			Size = UDim2.new(0, 34, 0, 34),
 			Color = Theme.White, Name = "SidebarLogo",
 		}
 		SidebarLogo = Custom:MakeIcon(SidebarLogoTile, Source, Props)
 		if not SidebarLogo then SidebarLogo = Custom:MakeIcon(SidebarLogoTile, "paw", Props) end
 		if SidebarLogo and SidebarLogo.Kind == "image" then
 			SidebarLogo.Image.ScaleType = Enum.ScaleType.Fit
-			Custom:Corner(SidebarLogo.Image, 9)
+			Custom:Corner(SidebarLogo.Image, 8)
 		end
 	end
 
+	-- Search stays in sidebar for compact layout (reference has it in top bar; library keeps functional search here)
 	local SearchBoxContainer = Custom:Create("Frame", {
 		BackgroundColor3 = Theme.Field, BackgroundTransparency = 0, BorderSizePixel = 0,
-		Position = UDim2.new(0, 9, 0, SidebarHeroMode and 9 or 67), Size = UDim2.new(1, -18, 0, 36), Name = "SBC",
+		Position = UDim2.new(0, 9, 0, 58), Size = UDim2.new(1, -18, 0, 32), Name = "SBC",
 	}, Side)
 	Custom:Corner(SearchBoxContainer, 8)
 	local SearchStroke = Custom:Stroke(SearchBoxContainer, Theme.Border, 0.7, 1)
 
 	local SearchIconObj = Custom:MakeIcon(SearchBoxContainer, "search", {
-		AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 10, 0.5, 0), Size = UDim2.new(0, 15, 0, 15),
+		AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 10, 0.5, 0), Size = UDim2.new(0, 14, 0, 14),
 		ZIndex = 2, Color = Theme.Sub, Name = "SI",
 	})
 
@@ -3122,7 +3203,7 @@ function Rexxzy_Library:CreateWindow(Config)
 		Font = Enum.Font.GothamBold, PlaceholderText = "Search...", PlaceholderColor3 = Theme.Sub,
 		Text = "", TextColor3 = Theme.Text, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left,
 		ClearTextOnFocus = false, BackgroundTransparency = 1, BorderSizePixel = 0,
-		ZIndex = 2, Position = UDim2.new(0, 31, 0, 0), Size = UDim2.new(1, -38, 1, 0), Name = "SearchBox",
+		ZIndex = 2, Position = UDim2.new(0, 30, 0, 0), Size = UDim2.new(1, -36, 1, 0), Name = "SearchBox",
 	}, SearchBoxContainer)
 
 	SearchBox.Focused:Connect(function()
@@ -3136,11 +3217,11 @@ function Rexxzy_Library:CreateWindow(Config)
 
 	local Layers = Custom:Create("Frame", {
 		BackgroundColor3 = Theme.Black, BackgroundTransparency = 0, BorderSizePixel = 0,
-		ClipsDescendants = true, Position = UDim2.new(0, TabWidth + 18, 0, 56),
-		Size = UDim2.new(1, -(TabWidth + 26), 1, -64), Name = "Layers",
+		ClipsDescendants = true, Position = UDim2.new(0, TabWidth + 16, 0, 52),
+		Size = UDim2.new(1, -(TabWidth + 24), 1, -52 - 28), Name = "Layers",
 	}, Main)
-	Custom:Corner(Layers, 16)
-	Custom:Stroke(Layers, Theme.Border, 0.42, 1)
+	Custom:Corner(Layers, 12)
+	Custom:Stroke(Layers, Theme.Border, 0.5, 1)
 
 	local PageHeaderIcon = Custom:MakeIcon(Layers, "paw", {
 		AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 18, 0, 32),
@@ -3167,47 +3248,12 @@ function Rexxzy_Library:CreateWindow(Config)
 		Position = UDim2.new(0, 8, 0, 76), Size = UDim2.new(1, -16, 1, -84), Name = "LayersReal",
 	}, Layers)
 
-	-- VLH tier badge, center bottom of content panel
-	do
-		local VLH_IsPremium = false -- ubah ke true kalau user premium
-		local VLH_TierText = VLH_IsPremium and "VLH · Premium v0.001" or "VLH · Free V1"
-		local VLH_TierColor = VLH_IsPremium and Color3.fromRGB(255, 215, 80) or Color3.fromRGB(160, 160, 160)
-
-		local VLHBadge = Custom:Create("Frame", {
-			Name = "VLHBadge",
-			AnchorPoint = Vector2.new(0.5, 1),
-			Position = UDim2.new(0.5, 0, 1, -10),
-			Size = UDim2.new(0, 0, 0, 20),
-			AutomaticSize = Enum.AutomaticSize.X,
-			BackgroundColor3 = Theme.Field,
-			BackgroundTransparency = 0.1,
-			BorderSizePixel = 0,
-			ZIndex = 10,
-		}, Layers)
-		Custom:Round(VLHBadge)
-		Custom:Stroke(VLHBadge, Theme.Border, 0.45, 1)
-		Custom:Create("UIPadding", {
-			PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10),
-		}, VLHBadge)
-		Custom:Label(VLHBadge, {
-			Text = VLH_TierText,
-			TextColor3 = VLH_TierColor,
-			TextSize = 10,
-			Font = Enum.Font.GothamBold,
-			Size = UDim2.new(0, 0, 1, 0),
-			AutomaticSize = Enum.AutomaticSize.X,
-			TextXAlignment = Enum.TextXAlignment.Center,
-			Name = "VLHTierLabel",
-			ZIndex = 11,
-		})
-	end
-
 	local ScrollTab = Custom:Create("ScrollingFrame", {
 		Active = true, BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(0, 0, 0, 0),
 		AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 3, ScrollBarImageColor3 = Theme.Sub,
 		ScrollBarImageTransparency = 0.55, ScrollingDirection = Enum.ScrollingDirection.Y,
-		Position = UDim2.new(0, 6, 0, SidebarHeroMode and 54 or 113),
-		Size = UDim2.new(1, -12, 1, SidebarHeroMode and -124 or -183), Name = "ScrollTab",
+		Position = UDim2.new(0, 6, 0, 96),
+		Size = UDim2.new(1, -12, 1, -108), Name = "ScrollTab",
 	}, Side)
 	Custom:Create("UIListLayout", { Padding = UDim.new(0, 9), SortOrder = Enum.SortOrder.LayoutOrder }, ScrollTab)
 	Custom:Create("UIPadding", {
@@ -3215,70 +3261,36 @@ function Rexxzy_Library:CreateWindow(Config)
 		PaddingLeft = UDim.new(0, 2), PaddingRight = UDim.new(0, 2),
 	}, ScrollTab)
 
+	-- Compact avatar footer hidden; welcome is now on the full-width BottomBar (matches photo)
 	local AvatarFooter = Custom:Create("Frame", {
-		AnchorPoint = Vector2.new(0, 1), BackgroundColor3 = Theme.Field, BackgroundTransparency = 0,
-		BorderSizePixel = 0, Position = UDim2.new(0, 7, 1, -7), Size = UDim2.new(1, -14, 0, 56), Name = "AvatarFooter",
+		AnchorPoint = Vector2.new(0, 1), BackgroundColor3 = Theme.Field, BackgroundTransparency = 1,
+		BorderSizePixel = 0, Position = UDim2.new(0, 7, 1, -7), Size = UDim2.new(1, -14, 0, 0), Name = "AvatarFooter",
+		Visible = false,
 	}, Side)
-	Custom:Corner(AvatarFooter, 11)
-	Custom:Stroke(AvatarFooter, Theme.Border, 0.5, 1)
 
 	local AvatarImage = Custom:Create("ImageLabel", {
 		Image = "rbxasset://textures/ui/GuiImagePlaceholder.png", AnchorPoint = Vector2.new(0, 0.5),
 		BackgroundColor3 = Theme.Panel, BorderSizePixel = 0,
-		Position = UDim2.new(0, 8, 0.5, 0), Size = UDim2.new(0, 39, 0, 39), Name = "AvatarImage",
+		Position = UDim2.new(0, 8, 0.5, 0), Size = UDim2.new(0, 28, 0, 28), Name = "AvatarImage",
+		Visible = false,
 	}, AvatarFooter)
-	Custom:Round(AvatarImage)
-	Custom:Stroke(AvatarImage, Theme.White, 0.4, 1.2)
 
 	local function CensorName(Name)
 		if #Name <= 3 then return Name end
 		return Name:sub(1, 3) .. "***"
 	end
-	-- Display name container with marquee scroll
-	local FooterNameClip = Custom:Create("Frame", {
-		BackgroundTransparency = 1, BorderSizePixel = 0, ClipsDescendants = true,
-		Position = UDim2.new(0, 56, 0, 7), Size = UDim2.new(1, -76, 0, 19), Name = "FooterNameClip",
-	}, AvatarFooter)
-	local FooterNameLabel = Custom:Label(FooterNameClip, {
-		Text = Player.DisplayName, TextColor3 = Theme.Text, TextSize = 12,
-		TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center,
-		Position = UDim2.new(0, 0, 0, 0), Size = UDim2.new(1, 0, 1, 0), Name = "WelcomeLabel",
-		AutomaticSize = Enum.AutomaticSize.X,
+	local WelcomeLabel = Custom:Label(AvatarFooter, {
+		Text = "Welcome, " .. (Player.DisplayName or "Anonymous"), TextColor3 = Theme.Text, TextSize = 12,
+		TextTruncate = Enum.TextTruncate.AtEnd, TextYAlignment = Enum.TextYAlignment.Center,
+		Position = UDim2.new(0, 56, 0, 7), Size = UDim2.new(1, -76, 0, 19), Name = "WelcomeLabel",
+		Visible = false,
 	})
-	Custom:Label(AvatarFooter, {
+	local WelcomeSubtitle = Custom:Label(AvatarFooter, {
 		Text = "@" .. CensorName(Player.Name), TextColor3 = Theme.Sub, TextSize = 9,
 		TextTruncate = Enum.TextTruncate.AtEnd, TextYAlignment = Enum.TextYAlignment.Center,
 		Position = UDim2.new(0, 56, 0, 28), Size = UDim2.new(1, -76, 0, 16), Name = "WelcomeSubtitle",
+		Visible = false,
 	})
-
-	-- Marquee scroll on footer display name
-	task.spawn(function()
-		while FooterNameClip and FooterNameClip.Parent do
-			task.wait(0.05)
-			if not FooterNameClip.Parent then break end
-			local ClipW = FooterNameClip.AbsoluteSize.X
-			local LabelW = FooterNameLabel.AbsoluteSize.X
-			if LabelW > ClipW + 2 then
-				local StartX = 0
-				local EndX = -(LabelW - ClipW + 8)
-				FooterNameLabel.Position = UDim2.new(0, StartX, 0, 0)
-				task.wait(1.2)
-				local Steps = 60
-				for i = 1, Steps do
-					if not FooterNameClip.Parent then break end
-					local t = i / Steps
-					local x = StartX + (EndX - StartX) * t
-					FooterNameLabel.Position = UDim2.new(0, math.floor(x), 0, 0)
-					task.wait(0.03)
-				end
-				task.wait(0.9)
-				FooterNameLabel.Position = UDim2.new(0, StartX, 0, 0)
-				task.wait(0.4)
-			else
-				task.wait(0.5)
-			end
-		end
-	end)
 
 	task.spawn(function()
 		local ok, url = pcall(function()
@@ -3604,45 +3616,34 @@ function Rexxzy_Library:CreateWindow(Config)
 
 	local SearchPopup = Custom:Create("Frame", {
 		BackgroundColor3 = Theme.Panel, BackgroundTransparency = 0, BorderSizePixel = 0,
-		ClipsDescendants = true, Position = UDim2.new(0, 0, 0, SidebarHeroMode and 46 or 104), Size = UDim2.new(1, 0, 0, 0),
+		ClipsDescendants = true, Position = UDim2.new(0, 0, 0, 92), Size = UDim2.new(1, 0, 0, 0),
 		Visible = false, ZIndex = 20, Name = "SearchPopup",
 	}, Side)
 	Custom:Corner(SearchPopup, 8)
 	Custom:Stroke(SearchPopup, Theme.White, 0.75, 1)
 	Custom:Create("UIListLayout", { Padding = UDim.new(0, 0), SortOrder = Enum.SortOrder.LayoutOrder }, SearchPopup)
 
-	-- Keep the sidebar composition in sync with SetSize and the resize grip.
-	-- Large desktop windows use the elevated brand mark from the reference;
-	-- compact windows return to the compact header inside the navigation panel.
+	-- Compact layout is fixed (matches photo). Keep positions stable on resize.
 	local function RefreshSidebarLayout()
 		if Destroyed or not DropShadowHolder.Parent then return end
-		local Width = DropShadowHolder.Size.X.Offset
-		local Height = DropShadowHolder.Size.Y.Offset
-		if Width <= 0 then Width = DropShadowHolder.AbsoluteSize.X end
-		if Height <= 0 then Height = DropShadowHolder.AbsoluteSize.Y end
-		local UseHero = not IsMobileCtx and Width >= 720 and Height >= 500
-		if UseHero == SidebarHeroMode then return end
-		SidebarHeroMode = UseHero
-
-		Side.Position = UDim2.new(0, 8, 0, UseHero and 132 or 56)
-		Side.Size = UDim2.new(0, TabWidth, 1, UseHero and -140 or -64)
-		SidebarBrand.Parent = UseHero and Main or Side
-		SidebarBrand.Position = UseHero and UDim2.new(0, 8, 0, 55) or UDim2.new(0, 10, 0, 8)
-		SidebarBrand.Size = UseHero and UDim2.new(0, TabWidth, 0, 84) or UDim2.new(1, -20, 0, 56)
-		SidebarLogoTile.Size = UseHero and UDim2.new(0, 76, 0, 76) or UDim2.new(0, 56, 0, 56)
+		Side.Position = UDim2.new(0, 8, 0, 52)
+		Side.Size = UDim2.new(0, TabWidth, 1, -40)
+		SidebarBrand.Parent = Side
+		SidebarBrand.Position = UDim2.new(0, 10, 0, 8)
+		SidebarBrand.Size = UDim2.new(1, -20, 0, 48)
+		SidebarLogoTile.Size = UDim2.new(0, 42, 0, 42)
 		if SidebarLogo and SidebarLogo.Instance then
-			SidebarLogo.Instance.AnchorPoint = Vector2.new(0.5, 0.5)
-			SidebarLogo.Instance.Position = UDim2.new(0.5, 0, 0.5, 0)
-			SidebarLogo.Instance.Size = UseHero and UDim2.new(0, 68, 0, 68) or UDim2.new(0, 48, 0, 48)
+			SidebarLogo.Instance.Size = UDim2.new(0, 34, 0, 34)
 		end
-		SearchBoxContainer.Position = UDim2.new(0, 9, 0, UseHero and 9 or 67)
-		ScrollTab.Position = UDim2.new(0, 6, 0, UseHero and 54 or 113)
-		ScrollTab.Size = UDim2.new(1, -12, 1, UseHero and -124 or -183)
-		SearchPopup.Position = UDim2.new(0, 0, 0, UseHero and 46 or 104)
+		SearchBoxContainer.Position = UDim2.new(0, 9, 0, 58)
+		ScrollTab.Position = UDim2.new(0, 6, 0, 96)
+		ScrollTab.Size = UDim2.new(1, -12, 1, -108)
+		SearchPopup.Position = UDim2.new(0, 0, 0, 92)
 	end
 	Track(DropShadowHolder:GetPropertyChangedSignal("Size"):Connect(function()
 		task.defer(RefreshSidebarLayout)
 	end))
+	task.defer(RefreshSidebarLayout)
 
 	local function RegisterSearch(Title, TargetFrame, Subtitle, SelectTabFn, EnsureOpenFn, ScrollFrameRef)
 		if Title == "" then return end
@@ -3813,10 +3814,14 @@ function Rexxzy_Library:CreateWindow(Config)
 		if State then
 			Bubble.Visible = false
 			DropShadowHolder.Visible = true
-			WindowScale.Scale = Base
+			Custom:Tween(WindowScale, 0.3, { Scale = Base }, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
 		else
-			DropShadowHolder.Visible = false
-			Bubble.Visible = ShouldShowBubble()
+			Custom:Tween(WindowScale, 0.15, { Scale = Base * 0.9 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+			task.delay(0.15, function()
+				if Destroyed or Opened then return end
+				DropShadowHolder.Visible = false
+				Bubble.Visible = ShouldShowBubble()
+			end)
 		end
 	end
 
@@ -3834,12 +3839,16 @@ function Rexxzy_Library:CreateWindow(Config)
 	end))
 
 	local Dragging, DragStart, StartPos = false, nil, nil
-	Top.InputBegan:Connect(function(i)
+	local function StartDrag(i)
 		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
 			Dragging = true DragStart = i.Position StartPos = DropShadowHolder.Position
 			i.Changed:Connect(function() if i.UserInputState == Enum.UserInputState.End then Dragging = false end end)
 		end
-	end)
+	end
+	Top.InputBegan:Connect(StartDrag)
+	-- Footer also draggable so user can move the window from bottom bar
+	BottomBar.InputBegan:Connect(StartDrag)
+	AvatarFooter.InputBegan:Connect(StartDrag)
 	Track(UserInputService.InputChanged:Connect(function(i)
 		if Dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
 			local d = i.Position - DragStart
@@ -4055,7 +4064,7 @@ function Rexxzy_Library:CreateWindow(Config)
 	function Funcs:SetScale(NewScale)
 		Base = math.clamp(tonumber(NewScale) or Base, 0.5, 1.5)
 		if MobileLayout then RefreshMobileLayout() end
-		if Opened and not Destroyed then WindowScale.Scale = Base end
+		if Opened and not Destroyed then Custom:Tween(WindowScale, 0.2, { Scale = Base }) end
 	end
 
 	function Funcs:SetSize(NewSize)
@@ -6235,11 +6244,12 @@ function Rexxzy_Library:CreateWindow(Config)
 	end
 
 	
-	-- Intro dan animasi open dihapus; window langsung muncul
-	DropShadowHolder.Visible = true
+	-- Intro / splash removed for instant open (matches reference UI)
+	local SplashEnabled = Config.Splash == true
 	WindowScale.Scale = Base
+	DropShadowHolder.Visible = true
 
-	task.delay(3, function()
+	task.defer(function()
 		if not Rexxzy_Library.AutoLoading then Rexxzy_Library.Armed = true end
 	end)
 
@@ -6334,7 +6344,7 @@ function KeySys.Defaults()
 			Input = Theme.Field, InputText = Theme.Text, Success = Theme.White, Error = Theme.Red,
 			Warning = Color3.fromRGB(255, 255, 255), Info = Theme.AccentSoft,
 			Font = Enum.Font.Gotham, FontBold = Enum.Font.GothamBold, IconSize = 16, IconAlign = "Left",
-			Animations = true, AnimationTime = 0.2, ReducedMotion = false,
+			Animations = false, AnimationTime = 0.15, ReducedMotion = true,
 		},
 		Authentication = {
 			DefaultMode = "API",
@@ -6659,7 +6669,7 @@ function Rexxzy_Library:CreateKeySystem(UserConfig)
 	local FontBold = typeof(App.FontBold) == "EnumItem" and App.FontBold or Enum.Font.GothamBold
 	local IconSize = math.clamp(tonumber(App.IconSize) or 16, 10, 32)
 	local IconRight = string.lower(tostring(App.IconAlign or "left")) == "right"
-	local AnimOn = App.Animations ~= false and App.ReducedMotion ~= true
+	local AnimOn = App.Animations == true and App.ReducedMotion ~= true
 	local Mult = math.clamp((tonumber(App.AnimationTime) or 0.2) / 0.2, 0.25, 5)
 	local Pad = math.clamp(tonumber(Win.Padding) or 14, 6, 32)
 
@@ -7752,8 +7762,15 @@ function Rexxzy_Library:CreateKeySystem(UserConfig)
 		task.wait()
 		if Destroyed then return end
 		ApplyFit()
-		UIScaleObj.Scale = TargetScale
-		Backdrop.BackgroundTransparency = BackdropGoal
+		if AnimOn then
+			UIScaleObj.Scale = TargetScale * 0.92
+			Anim(Backdrop, 0.25, { BackgroundTransparency = BackdropGoal })
+			local Tw = Anim(UIScaleObj, 0.28, { Scale = TargetScale }, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+			if Tw then Tw.Completed:Wait() end
+		else
+			UIScaleObj.Scale = TargetScale
+			Backdrop.BackgroundTransparency = BackdropGoal
+		end
 		if Destroyed then return end
 		Intro = false
 		ApplyFit()
@@ -7817,7 +7834,7 @@ function Rexxzy_Library:CreateKaitunGui(UserConfig)
 		IgnoreGuiInset = UserConfig.IgnoreGuiInset ~= false,
 		DisplayOrder = math.clamp(tonumber(UserConfig.DisplayOrder) or 250, 1, 999),
 		ZIndexBehavior = UserConfig.ZIndexBehavior or Enum.ZIndexBehavior.Sibling,
-		Animations = UserConfig.Animations ~= false,
+		Animations = UserConfig.Animations == true,
 		CloseOnClick = UserConfig.CloseOnClick == true,
 		Name = tostring(UserConfig.Name or "RexxzyKaitunGui"),
 	}
@@ -8188,13 +8205,28 @@ function Rexxzy_Library:CreateKaitunGui(UserConfig)
 		if Dead() then return end
 		Gui.Enabled = true
 		Root.Visible = true
-		Root.BackgroundTransparency = Cfg.BackgroundTransparency
-		LogoScale.Scale = 1
+		if Cfg.Animations then
+			Root.BackgroundTransparency = 1
+			LogoScale.Scale = 0.88
+			Anim(Root, 0.32, { BackgroundTransparency = Cfg.BackgroundTransparency })
+			Anim(LogoScale, 0.4, { Scale = 1 }, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		else
+			Root.BackgroundTransparency = Cfg.BackgroundTransparency
+			LogoScale.Scale = 1
+		end
 	end
 
 	function Self:Hide()
 		if Dead() then return end
-		Root.Visible = false
+		if Cfg.Animations then
+			Anim(Root, 0.25, { BackgroundTransparency = 1 })
+			Anim(LogoScale, 0.2, { Scale = 0.9 })
+			task.delay(0.28, function()
+				if not Dead() then Root.Visible = false end
+			end)
+		else
+			Root.Visible = false
+		end
 	end
 
 	function Self:Destroy(Instant)
@@ -8211,7 +8243,13 @@ function Rexxzy_Library:CreateKaitunGui(UserConfig)
 				Rexxzy_Library.ActiveKaitunGui = nil
 			end
 		end
-		Teardown()
+		if Instant == true or not Cfg.Animations then
+			Teardown()
+		else
+			Anim(Root, 0.22, { BackgroundTransparency = 1 })
+			Anim(LogoScale, 0.18, { Scale = 0.88 })
+			task.delay(0.26, Teardown)
+		end
 	end
 
 	function Self:IsDestroyed()
