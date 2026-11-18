@@ -1,4 +1,4 @@
--- Just Indicator Is Update Or No ABCDEFG
+-- Just Indicator Is Update Or No ABCDEFGhshs 
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -2799,65 +2799,83 @@ function Rexxzy_Library:CreateWindow(Config)
 
 	-- Full bottom status bar matching the photo:
 	-- Left: avatar + "Welcome, Anonymous"   |   Center: Free V1 / Premium v0.001   |   Right: FPS
-	local VersionText = tostring(Config.Version or Config.AccessTier or "Free V1")
-	if string.lower(VersionText) == "premium" then VersionText = "Premium v0.001" end
-	if string.lower(VersionText) == "free" then VersionText = "Free V1" end
+	local function SafeVersionString(v)
+		if type(v) == "string" then
+			local s = v:gsub("^%s+", ""):gsub("%s+$", "")
+			if s ~= "" and not s:match("^table:") then
+				local low = string.lower(s)
+				if low == "premium" or low == "paid" or low == "vip" then return "Premium v0.001" end
+				if low == "free" then return "Free V1" end
+				return s
+			end
+		end
+		return "Free V1"
+	end
+	local VersionText = SafeVersionString(Config.Version)
+	if VersionText == "Free V1" and type(Config.AccessTier) == "string" then
+		VersionText = SafeVersionString(Config.AccessTier)
+	end
 
 	local BottomBar = Custom:Create("Frame", {
-		AnchorPoint = Vector2.new(0, 1), BackgroundColor3 = Theme.Panel, BackgroundTransparency = 0.15,
-		BorderSizePixel = 0, Position = UDim2.new(0, 0, 1, 0), Size = UDim2.new(1, 0, 0, 32),
+		AnchorPoint = Vector2.new(0, 1), BackgroundColor3 = Theme.Panel, BackgroundTransparency = 0.2,
+		BorderSizePixel = 0, Position = UDim2.new(0, 0, 1, 0), Size = UDim2.new(1, 0, 0, 30),
 		ZIndex = 8, Name = "BottomBar",
 	}, Main)
 
 	local BottomAvatar = Custom:Create("ImageLabel", {
 		Image = "rbxasset://textures/ui/GuiImagePlaceholder.png",
 		AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Theme.Field, BorderSizePixel = 0,
-		Position = UDim2.new(0, 12, 0.5, 0), Size = UDim2.new(0, 22, 0, 22), Name = "BottomAvatar",
+		Position = UDim2.new(0, 10, 0.5, 0), Size = UDim2.new(0, 20, 0, 20), Name = "BottomAvatar",
 	}, BottomBar)
 	Custom:Round(BottomAvatar)
-	Custom:Stroke(BottomAvatar, Theme.Border, 0.4, 1)
 
 	local WelcomeText = Custom:Label(BottomBar, {
-		Text = "Welcome, " .. (Player.DisplayName or "Anonymous"),
-		TextColor3 = Theme.Text, TextSize = 12, Font = Enum.Font.Gotham,
+		Text = "Welcome, " .. tostring(Player.DisplayName or "Anonymous"),
+		TextColor3 = Theme.Text, TextSize = 11, Font = Enum.Font.Gotham,
 		TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Center,
 		TextTruncate = Enum.TextTruncate.AtEnd,
-		Position = UDim2.new(0, 42, 0, 0), Size = UDim2.new(0, 180, 1, 0), Name = "WelcomeText",
+		Position = UDim2.new(0, 36, 0, 0), Size = UDim2.new(0, 160, 1, 0), Name = "WelcomeText",
 	})
 
 	local VersionLabel = Custom:Label(BottomBar, {
-		Text = VersionText, TextColor3 = Theme.Sub, TextSize = 11, Font = Enum.Font.GothamMedium,
+		Text = VersionText,
+		TextColor3 = Theme.Sub, TextSize = 11, Font = Enum.Font.GothamMedium,
 		TextXAlignment = Enum.TextXAlignment.Center, TextYAlignment = Enum.TextYAlignment.Center,
 		AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
-		Size = UDim2.new(0, 140, 0, 18), Name = "VersionLabel",
+		Size = UDim2.new(0, 120, 0, 16), Name = "VersionLabel",
 	})
 
 	local FpsLabel = Custom:Label(BottomBar, {
-		Text = "60 FPS", TextColor3 = Theme.Sub, TextSize = 11, Font = Enum.Font.GothamMedium,
+		Text = "60 FPS",
+		TextColor3 = Theme.Sub, TextSize = 11, Font = Enum.Font.GothamMedium,
 		TextXAlignment = Enum.TextXAlignment.Right, TextYAlignment = Enum.TextYAlignment.Center,
-		AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -14, 0.5, 0),
-		Size = UDim2.new(0, 64, 0, 18), Name = "FpsLabel",
+		AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0),
+		Size = UDim2.new(0, 58, 0, 16), Name = "FpsLabel",
 	})
 
 	task.spawn(function()
 		local ok, url = pcall(function()
 			return Players:GetUserThumbnailAsync(Player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
 		end)
-		if ok and url then BottomAvatar.Image = url end
+		if ok and url and BottomAvatar then BottomAvatar.Image = url end
 	end)
 
-	-- Simple FPS counter
 	task.spawn(function()
 		local last = tick()
 		local frames = 0
 		local conn
 		conn = RunService.RenderStepped:Connect(function()
-			if Destroyed then if conn then conn:Disconnect() end return end
+			if Destroyed then
+				if conn then conn:Disconnect() end
+				return
+			end
 			frames = frames + 1
 			local now = tick()
 			if now - last >= 0.5 then
 				local fps = math.floor(frames / (now - last) + 0.5)
-				FpsLabel.Text = tostring(fps) .. " FPS"
+				if FpsLabel and FpsLabel.Parent then
+					FpsLabel.Text = tostring(fps) .. " FPS"
+				end
 				frames = 0
 				last = now
 			end
@@ -2866,15 +2884,17 @@ function Rexxzy_Library:CreateWindow(Config)
 	end)
 
 	function Funcs:SetVersion(Text)
-		VersionText = tostring(Text or VersionText)
-		if VersionLabel and VersionLabel.Parent then VersionLabel.Text = VersionText end
+		VersionText = SafeVersionString(Text)
+		if VersionLabel and VersionLabel.Parent then
+			VersionLabel.Text = VersionText
+		end
 	end
 	function Funcs:GetVersion()
 		return VersionText
 	end
 	function Funcs:SetWelcome(Text)
 		if WelcomeText and WelcomeText.Parent then
-			WelcomeText.Text = tostring(Text or ("Welcome, " .. (Player.DisplayName or "Anonymous")))
+			WelcomeText.Text = tostring(Text or ("Welcome, " .. tostring(Player.DisplayName or "Anonymous")))
 		end
 	end
 
