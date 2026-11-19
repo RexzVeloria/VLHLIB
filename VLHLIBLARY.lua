@@ -1,4 +1,4 @@
-
+ -- Veloria Hub UI Library | VLH Monochrome Interface
 local a=game:GetService("Players")local b=game:GetService("RunService")local c=game:GetService("TweenService")local d=game:GetService("UserInputService")local e=game:GetService("VirtualUser")local f=game:GetService("HttpService")local g=game:GetService("TextService")local h=game:GetService("GuiService")local i=a.LocalPlayer;
 local function j()if identifyexecutor then local k,
 l=pcall(identifyexecutor)if k and l then return tostring(l)end end;
@@ -1629,7 +1629,10 @@ function ek.Destroy()if ej then ej:Destroy()end end;
 return ek end;
 function _:Graphic(a2, d0, a1)local ek=_:MakeIcon(a2, d0, a1)return ek end;
 local eq= {}
-
+eq.Brand="Veloria Hub"
+eq.Prefix="VLH"
+eq.Logo="rbxassetid://131946786209484"
+eq.DiscordURL="https://discord.gg/GrWpVXbWfj"
 eq.Unloaded=false;
 local er,
 es,
@@ -2056,8 +2059,20 @@ function eq:HasIcon(a0)return aD:Resolve(a0)~=nil end;
 function eq:GetIcons()return aD:List()end;
 task.defer(function()if f0()then eq:GetAutoSave()eq:RescanConfigs()end end)function eq:CreateWindow(ew)local fF=ew[1]or ew.Title or"Veloria Hub"local fG=ew[2]or ew.Description or""local fH=ew[3]or ew["Tab Width"]or 144;
 local fI=ew[4]or ew.SizeUi or UDim2.fromOffset(760, 500)local fJ=ew[5]or ew.Keybind or Enum.KeyCode.RightControl;
--- Brand artwork defaults to the floating button. Header artwork is opt-in.
-local fK=ew.BubbleIcon or ew.FloatIcon or ew.OpenIcon or ew.Icon or"rbxassetid://131946786209484"local fL= {}
+-- VLH brand icon aliases: "Default" and "VLH" resolve to the Veloria logo.
+local VLH_LOGO="rbxassetid://131946786209484"
+local function resolveVLHIcon(value)
+    if value==nil then return VLH_LOGO end
+    if type(value)=="string" then
+        local alias=string.lower(value)
+        if alias=="default" or alias=="vlh" or alias=="veloria" or alias=="veloria hub" then
+            return VLH_LOGO
+        end
+    end
+    return value
+end
+-- The floating launcher defaults to the Veloria Hub logo.
+local fK=resolveVLHIcon(ew.BubbleIcon or ew.FloatIcon or ew.OpenIcon or ew.Icon or VLH_LOGO)local fL= {}
 
 local fM= {}
 
@@ -2169,15 +2184,20 @@ local ci=_:Create("Frame", {
 , gc)local function ge(g8)for I,
 gf in ipairs(gd:GetChildren())do gf:Destroy()end;
 if g8==nil or g8==""or g8==false then gd.Visible=false;
+gd.Size=UDim2.new(0,0,0,0)
 return end;
+g8=resolveVLHIcon(g8)
+gd.Size=UDim2.new(0,24,0,24)
 local ek=_:MakeIcon(gd, g8, {
     Size=UDim2.new(0, 24, 0, 24), Color=Z.White, Name="Icon"
 }
 
 )if ek then gd.Visible=true;
-if ek.Kind=="image"then ek.Image.ScaleType=Enum.ScaleType.Crop;
-_:Corner(ek.Image, 6)end else gd.Visible=false end end;
-ge(ew.HeaderIcon) -- Do not duplicate the Veloria mark beside the title.
+if ek.Kind=="image"then ek.Image.ScaleType=Enum.ScaleType.Fit;
+_:Corner(ek.Image, 6)end else gd.Visible=false;gd.Size=UDim2.new(0,0,0,0) end end;
+local headerIcon=ew.HeaderIcon
+if headerIcon==nil then headerIcon=ew.TitleIcon or ew.DefaultIcon or ew.VLHIcon or "Default" end
+ge(headerIcon) -- The default VLH mark sits immediately before the title.
 local gg=_:Label(gc, {
     Text=fF, TextColor3=Z.White, TextSize=13, LayoutOrder=2, AutomaticSize=Enum.AutomaticSize.X, Size=UDim2.new(0, 0, 0, 18), Name="Title"
 }
@@ -2557,6 +2577,10 @@ function footerApi:SetBarHeight(height)
     height=math.clamp(tonumber(height) or 50,32,100)
     gV.Size=UDim2.new(1,0,0,height)
 end
+-- Public footer configuration is intentionally a single string: VLHFooter = "text".
+if type(ew.VLHFooter)=="string" and ew.VLHFooter~="" then
+    footerApi:AddText(ew.VLHFooter)
+end
 local gPerf=_:Create("Frame", {
     AnchorPoint=Vector2.new(1, 0.5), BackgroundColor3=Color3.fromRGB(22, 22, 22), BackgroundTransparency=0.05,
     BorderSizePixel=0, Position=UDim2.new(1, -14, 0.5, 0), Size=UDim2.new(0, 76, 0, 28), Name="PerformanceChip"
@@ -2671,12 +2695,12 @@ local hn=fK~=""and fK or"rbxassetid://131946786209484"local ho=UDim2.new(0.89, 0
 local hr=Vector2.new(0, 0)local function hs(a_)local av=string.lower(tostring(a_ or""))if av=="topbar"or av=="topbarplus"or av=="roblox"or av=="roblox topbar"then return"Topbar"end;
 return"Draggable"end;
 if type(ew.BubbleType)=="string"then hp=hs(ew.BubbleType)end;
-if type(hl)=="table"then hn=hl.Icon or hl.Image or hl[1]or hn;
+if type(hl)=="table"then hn=resolveVLHIcon(hl.Icon or hl.Image or hl[1]or hn);
 hm=tonumber(hl.Size)or hm;
 if typeof(hl.Position)=="UDim2"then ho=hl.Position end;
 if hl.Type~=nil then hp=hs(hl.Type)end;
 if hl.Title~=nil then hq=tostring(hl.Title)end;
-if typeof(hl.Offset)=="Vector2"then hr=hl.Offset end elseif hl~=nil and hl~=false and hl~=""then hn=hl end;
+if typeof(hl.Offset)=="Vector2"then hr=hl.Offset end elseif hl~=nil and hl~=false and hl~=""then hn=resolveVLHIcon(hl) end;
 local ht=_:Create("TextButton", {
     Name="OpenClose", Text="", AutoButtonColor=false, BackgroundColor3=Z.Dark, BorderSizePixel=0, Position=ho, Size=UDim2.new(0, hm, 0, hm), Visible=true, ZIndex=150
 }
@@ -4827,7 +4851,7 @@ _:Tween(f_, 0.4, {
     Scale=ch
 }
 
-, Enum.EasingStyle.Back, Enum.EasingDirection.Out)task.delay(3, function()if not eq.AutoLoading then eq.Armed=true end end)fL.DiscordURL="https://discord.gg/GrWpVXbWfj"
+, Enum.EasingStyle.Back, Enum.EasingDirection.Out)task.delay(3, function()if not eq.AutoLoading then eq.Armed=true end end)fL.DiscordURL=tostring(ew.DiscordURL or eq.DiscordURL or "https://discord.gg/GrWpVXbWfj")
 function fL:OpenDiscord()
     local opened=pcall(function()h:OpenBrowserWindow(self.DiscordURL)end)
     if not opened and setclipboard then
@@ -4846,21 +4870,7 @@ fL.VLHColorPicker=fL.ColorPicker
 fL.VLHSetTitle=fL.SetTitle
 fL.VLHSetDescription=fL.SetDescription
 fL.VLHOpenDiscord=fL.OpenDiscord
--- Footer customization API: Window:VLHFooter() returns an editable footer builder.
-fL.Footer=footerApi
-function fL:VLHFooter(options)
-    options=options or {}
-    if type(options)~="table" then options={Text=tostring(options)} end
-    if options.Clear==true then footerApi:Clear() end
-    if options.Text~=nil then footerApi:AddText({Text=options.Text,Color=options.TextColor,TextSize=options.TextSize,Bold=options.Bold}) end
-    if options.Badge~=nil then footerApi:AddBadge(type(options.Badge)=="table" and options.Badge or {Text=options.Badge}) end
-    if options.Button~=nil then footerApi:AddButton(type(options.Button)=="table" and options.Button or {Text=options.Button,Callback=options.Callback}) end
-    if options.Visible~=nil then footerApi:SetVisible(options.Visible) end
-    if options.Background~=nil or options.BackgroundTransparency~=nil then footerApi:SetBarBackground(options.Background,options.BackgroundTransparency) end
-    if options.Height~=nil then footerApi:SetBarHeight(options.Height) end
-    return footerApi
-end
-fL.VLHSetFooter=function(self,options) return self:VLHFooter(options) end
+-- Footer text is configured only through CreateWindow({ VLHFooter = "..." }).
 fL.VLHDestroy=fL.Destroy
 return fL end;
 eq.VLHCreateWindow=eq.CreateWindow
@@ -5818,10 +5828,6 @@ pa=false;
 r3()local fD=qw()if fD and p2.AutoVerify~=false then local ra=fD.Mode=="Password"and"Password"or"API"if ra=="Password"and py or ra=="API"and px then q_(ra)m7.Text=fD.Key;
 p8=true;
 qV(fD.Key)end end end)return p3 end;
-eq.Brand="Veloria Hub"
-eq.Prefix="VLH"
-eq.Logo="rbxassetid://131946786209484"
-eq.DiscordURL="https://discord.gg/GrWpVXbWfj"
 return {
     Library=eq,
     Webhook=U
