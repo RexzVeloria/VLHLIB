@@ -1,4 +1,4 @@
- -- Veloria Hub UI Library | VLH Monochrome Interface
+
 local a=game:GetService("Players")local b=game:GetService("RunService")local c=game:GetService("TweenService")local d=game:GetService("UserInputService")local e=game:GetService("VirtualUser")local f=game:GetService("HttpService")local g=game:GetService("TextService")local h=game:GetService("GuiService")local i=a.LocalPlayer;
 local function j()if identifyexecutor then local k,
 l=pcall(identifyexecutor)if k and l then return tostring(l)end end;
@@ -2056,7 +2056,8 @@ function eq:HasIcon(a0)return aD:Resolve(a0)~=nil end;
 function eq:GetIcons()return aD:List()end;
 task.defer(function()if f0()then eq:GetAutoSave()eq:RescanConfigs()end end)function eq:CreateWindow(ew)local fF=ew[1]or ew.Title or"Veloria Hub"local fG=ew[2]or ew.Description or""local fH=ew[3]or ew["Tab Width"]or 144;
 local fI=ew[4]or ew.SizeUi or UDim2.fromOffset(760, 500)local fJ=ew[5]or ew.Keybind or Enum.KeyCode.RightControl;
-local fK=ew[6]or ew.Icon or"rbxassetid://131946786209484"local fL= {}
+-- Brand artwork defaults to the floating button. Header artwork is opt-in.
+local fK=ew.BubbleIcon or ew.FloatIcon or ew.OpenIcon or ew.Icon or"rbxassetid://131946786209484"local fL= {}
 
 local fM= {}
 
@@ -2162,7 +2163,7 @@ local ci=_:Create("Frame", {
 }
 
 , gc)local gd=_:Create("Frame", {
-    BackgroundTransparency=1, BorderSizePixel=0, LayoutOrder=1, Size=UDim2.new(0, 24, 0, 24), Visible=false, Name="IconSlot"
+    BackgroundTransparency=1, BorderSizePixel=0, LayoutOrder=1, Size=UDim2.new(0, 0, 0, 0), Visible=false, Name="HeaderIconSlot"
 }
 
 , gc)local function ge(g8)for I,
@@ -2176,7 +2177,8 @@ local ek=_:MakeIcon(gd, g8, {
 )if ek then gd.Visible=true;
 if ek.Kind=="image"then ek.Image.ScaleType=Enum.ScaleType.Crop;
 _:Corner(ek.Image, 6)end else gd.Visible=false end end;
-ge(fK)local gg=_:Label(gc, {
+ge(ew.HeaderIcon) -- Do not duplicate the Veloria mark beside the title.
+local gg=_:Label(gc, {
     Text=fF, TextColor3=Z.White, TextSize=13, LayoutOrder=2, AutomaticSize=Enum.AutomaticSize.X, Size=UDim2.new(0, 0, 0, 18), Name="Title"
 }
 
@@ -2188,8 +2190,46 @@ ge(fK)local gg=_:Label(gc, {
     Font=Enum.Font.Gotham, Text=fG, TextColor3=Z.Sub, TextSize=11, LayoutOrder=4, AutomaticSize=Enum.AutomaticSize.X, Size=UDim2.new(0, 0, 0, 18), Name="Description"
 }
 
-)local function gj()gh.Visible=gi.Text~=""gi.Visible=gi.Text~=""end;
-gj()local gk=_:Create("Frame", {
+)
+local descriptionText=tostring(fG or "")
+local descriptionTyping=ew.DescriptionTyping~=false
+local descriptionSpeed=math.clamp(tonumber(ew.DescriptionTypingSpeed)or 0.055,0.015,0.25)
+local descriptionPause=math.clamp(tonumber(ew.DescriptionTypingPause)or 1.15,0.2,5)
+local descriptionGeneration=0
+local function gj()
+    local hasDescription=descriptionText~=""
+    gh.Visible=hasDescription
+    gi.Visible=hasDescription
+end
+local function gTypingStart()
+    descriptionGeneration=descriptionGeneration+1
+    local generation=descriptionGeneration
+    if not descriptionTyping or descriptionText=="" then
+        gi.Text=descriptionText
+        gj()
+        return
+    end
+    task.spawn(function()
+        while not fP and gi.Parent and generation==descriptionGeneration do
+            local current=descriptionText
+            for index=1,#current do
+                if fP or not gi.Parent or generation~=descriptionGeneration then return end
+                gi.Text=string.sub(current,1,index)
+                task.wait(descriptionSpeed)
+            end
+            task.wait(descriptionPause)
+            for index=#current,0,-1 do
+                if fP or not gi.Parent or generation~=descriptionGeneration then return end
+                gi.Text=string.sub(current,1,index)
+                task.wait(math.max(descriptionSpeed*0.58,0.015))
+            end
+            task.wait(0.28)
+        end
+    end)
+end
+gj()
+gTypingStart()
+local gk=_:Create("Frame", {
     AnchorPoint=Vector2.new(1, 0.5), BackgroundTransparency=1, BorderSizePixel=0, Position=UDim2.new(1, -246, 0.5, 0), Size=UDim2.new(0, 0, 0, 18), AutomaticSize=Enum.AutomaticSize.X, Name="Tags"
 }
 
@@ -2266,7 +2306,11 @@ return gu end;
 function gm:AddExecutorTag(gx, gp)return gm:AddDynamic("Executor", function()return j()end, gx, gp or"cpu")end;
 fL.Tags=gm;
 function fL:SetTitle(gz)gg.Text=tostring(gz)end;
-function fL:SetDescription(gA)gi.Text=tostring(gA)gj()end;
+function fL:SetDescription(gA)
+    descriptionText=tostring(gA or "")
+    gj()
+    gTypingStart()
+end;
 local gB=_:Create("TextButton", {
     Text="", AutoButtonColor=false, AnchorPoint=Vector2.new(1, 0.5), BackgroundColor3=Z.Panel, BackgroundTransparency=0.08, BorderSizePixel=0, ClipsDescendants=true, Position=UDim2.new(1, -8, 0.5, 0), Size=UDim2.new(0, 28, 0, 28), Name="Close"
 }
@@ -2410,10 +2454,110 @@ local gU=math.clamp(tonumber(gP.RainbowSpeed or ew.ProfileRainbowSpeed)or 4, 1, 
 , gV)_:Round(gY)_:Stroke(gY, Z.White, 0.4, 1.2)local function gZ(a0)if#a0<=3 then return a0 end;
 return a0:sub(1, 3).."***"end;
 local g_=_:Label(gV, {
-    Text="Welcome, "..gZ(i.Name), TextColor3=Z.Text, TextSize=10, TextTruncate=Enum.TextTruncate.AtEnd, TextYAlignment=Enum.TextYAlignment.Center, Position=UDim2.new(0, 50, 0, 0), Size=UDim2.new(1, -148, 1, 0), Name="WelcomeLabel"
+    Text="Welcome, "..gZ(i.Name), TextColor3=Z.Text, TextSize=10, TextTruncate=Enum.TextTruncate.AtEnd, TextYAlignment=Enum.TextYAlignment.Center, Position=UDim2.new(0, 50, 0, 0), Size=UDim2.new(0, 148, 1, 0), Name="WelcomeLabel"
 }
 
-)local gPerf=_:Create("Frame", {
+)
+-- Custom VLHFooter content lives in the open center area of the bottom bar.
+local gFooterItems=_:Create("Frame", {
+    BackgroundTransparency=1, BorderSizePixel=0, Position=UDim2.new(0, 214, 0, 0),
+    Size=UDim2.new(1, -322, 1, 0), Name="VLHFooterContent"
+}, gV)
+local gFooterLayout=_:Create("UIListLayout", {
+    FillDirection=Enum.FillDirection.Horizontal, HorizontalAlignment=Enum.HorizontalAlignment.Left,
+    VerticalAlignment=Enum.VerticalAlignment.Center, SortOrder=Enum.SortOrder.LayoutOrder,
+    Padding=UDim.new(0, 8)
+}, gFooterItems)
+local footerApi={Frame=gFooterItems, Bar=gV}
+local function footerMakeItem(className, name, size)
+    local item=_:Create(className, {
+        Name=name or "VLHFooterItem", LayoutOrder=#gFooterItems:GetChildren()+1,
+        BackgroundTransparency=1, BorderSizePixel=0, AutomaticSize=Enum.AutomaticSize.X,
+        Size=size or UDim2.new(0,0,0,24)
+    }, gFooterItems)
+    return item
+end
+function footerApi:AddText(config, properties)
+    if type(config)~="table" then config={Text=tostring(config or ""), Properties=properties} end
+    local label=footerMakeItem("TextLabel",config.Name or "FooterText",UDim2.new(0,0,0,22))
+    label.Font=config.Bold and Enum.Font.GothamBold or Enum.Font.GothamMedium
+    label.Text=tostring(config.Text or "")
+    label.TextColor3=config.Color or Z.Sub
+    label.TextSize=tonumber(config.TextSize) or 10
+    label.TextXAlignment=Enum.TextXAlignment.Left
+    label.TextYAlignment=Enum.TextYAlignment.Center
+    label.AutomaticSize=Enum.AutomaticSize.X
+    label.Size=UDim2.new(0,0,0,22)
+    if type(config.Properties)=="table" then for key,value in pairs(config.Properties) do pcall(function() label[key]=value end) end end
+    return {Frame=label,Set=function(_,value) if label.Parent then label.Text=tostring(value) end end,
+        Destroy=function() if label.Parent then label:Destroy() end end}
+end
+function footerApi:AddBadge(config)
+    if type(config)~="table" then config={Text=tostring(config or "Badge")} end
+    local badge=_:Create("TextLabel", {
+        Name=config.Name or "FooterBadge", AutomaticSize=Enum.AutomaticSize.X,
+        Size=UDim2.new(0,0,0,22), BackgroundColor3=config.Background or Z.Panel,
+        BackgroundTransparency=tonumber(config.BackgroundTransparency) or 0.05,
+        BorderSizePixel=0, Font=Enum.Font.GothamBold, Text=tostring(config.Text or ""),
+        TextColor3=config.Color or Z.Text, TextSize=tonumber(config.TextSize) or 9,
+        LayoutOrder=#gFooterItems:GetChildren()+1
+    },gFooterItems)
+    _:Corner(badge,6)
+    _:Stroke(badge,config.BorderColor or Z.White,0.86,1)
+    _:Create("UIPadding",{PaddingLeft=UDim.new(0,8),PaddingRight=UDim.new(0,8)},badge)
+    return {Frame=badge,Set=function(_,value)if badge.Parent then badge.Text=tostring(value)end end,
+        Destroy=function()if badge.Parent then badge:Destroy()end end}
+end
+function footerApi:AddButton(config)
+    if type(config)=="string" then config={Text=config} end
+    config=config or {}
+    local button=_:Create("TextButton", {
+        Name=config.Name or "FooterButton", AutoButtonColor=false,
+        AutomaticSize=Enum.AutomaticSize.X, Size=UDim2.new(0,0,0,26),
+        BackgroundColor3=config.Background or Z.Panel, BackgroundTransparency=tonumber(config.BackgroundTransparency) or 0.08,
+        BorderSizePixel=0, Font=Enum.Font.GothamBold, Text=tostring(config.Text or config.Title or "Action"),
+        TextColor3=config.Color or Z.Text, TextSize=tonumber(config.TextSize) or 10,
+        LayoutOrder=#gFooterItems:GetChildren()+1
+    },gFooterItems)
+    _:Corner(button,6)
+    _:Stroke(button,config.BorderColor or Z.White,0.86,1)
+    _:Create("UIPadding",{PaddingLeft=UDim.new(0,10),PaddingRight=UDim.new(0,10)},button)
+    button.Activated:Connect(function() if type(config.Callback)=="function" then task.spawn(config.Callback) end end)
+    return {Frame=button,SetText=function(_,value)if button.Parent then button.Text=tostring(value)end end,
+        SetVisible=function(_,value)button.Visible=value==true end,
+        Destroy=function()if button.Parent then button:Destroy()end end}
+end
+function footerApi:AddIcon(icon, size)
+    local slot=footerMakeItem("Frame","FooterIconSlot",UDim2.new(0,tonumber(size)or 16,0,tonumber(size)or 16))
+    slot.AutomaticSize=Enum.AutomaticSize.None
+    local rendered=_:MakeIcon(slot,icon,{Size=UDim2.new(1,0,1,0),Color=Z.Sub,Name="FooterIcon"})
+    return {Frame=slot,SetIcon=function(self,value)
+        for _,child in ipairs(slot:GetChildren()) do child:Destroy() end
+        rendered=_:MakeIcon(slot,value,{Size=UDim2.new(1,0,1,0),Color=Z.Sub,Name="FooterIcon"})
+    end,Destroy=function()if slot.Parent then slot:Destroy()end end}
+end
+function footerApi:AddCustom(guiObject, properties)
+    if typeof(guiObject)~="Instance" or not guiObject:IsA("GuiObject") then return nil end
+    if type(properties)=="table" then for key,value in pairs(properties) do pcall(function()guiObject[key]=value end) end end
+    guiObject.LayoutOrder=#gFooterItems:GetChildren()+1
+    guiObject.Parent=gFooterItems
+    return guiObject
+end
+function footerApi:Clear()
+    for _,child in ipairs(gFooterItems:GetChildren()) do
+        if not child:IsA("UIListLayout") then child:Destroy() end
+    end
+end
+function footerApi:SetVisible(value) gFooterItems.Visible=value~=false end
+function footerApi:SetBarBackground(color, transparency)
+    if typeof(color)=="Color3" then gV.BackgroundColor3=color end
+    if transparency~=nil then gV.BackgroundTransparency=math.clamp(tonumber(transparency) or 0,0,1) end
+end
+function footerApi:SetBarHeight(height)
+    height=math.clamp(tonumber(height) or 50,32,100)
+    gV.Size=UDim2.new(1,0,0,height)
+end
+local gPerf=_:Create("Frame", {
     AnchorPoint=Vector2.new(1, 0.5), BackgroundColor3=Color3.fromRGB(22, 22, 22), BackgroundTransparency=0.05,
     BorderSizePixel=0, Position=UDim2.new(1, -14, 0.5, 0), Size=UDim2.new(0, 76, 0, 28), Name="PerformanceChip"
 }, gV)_:Corner(gPerf, 7)_:Stroke(gPerf, Z.White, 0.9, 1)
@@ -2429,7 +2573,7 @@ fR(b.RenderStepped:Connect(function(dt)
     end
 end))
 local h0=nil;
-local function h1(a0)gS=gR(a0)local co=gQ[gS]gV.Size=UDim2.new(1, 0, 0, co.Footer)gY.Size=UDim2.new(0, co.Avatar, 0, co.Avatar)g_.Position=UDim2.new(0, co.Avatar+22, 0, 0)g_.Size=UDim2.new(1, -(co.Avatar+128), 1, 0)g_.TextSize=co.Text;
+local function h1(a0)gS=gR(a0)local co=gQ[gS]gV.Size=UDim2.new(1, 0, 0, co.Footer)gY.Size=UDim2.new(0, co.Avatar, 0, co.Avatar)g_.Position=UDim2.new(0, co.Avatar+22, 0, 0)g_.Size=UDim2.new(0, 148, 1, 0)g_.TextSize=co.Text;
 gO.Size=UDim2.new(1, 0, 1, -16)end;
 local function h2(h3, h4)gT=h3==true;
 if tonumber(h4)then gU=math.clamp(tonumber(h4), 1, 30)end;
@@ -2523,7 +2667,7 @@ task.wait(0.3)if hk.TargetFrame then _:Highlight(hk.TargetFrame)end end)end)end;
 h5.Size=UDim2.new(1, 0, 0, math.min(#hj*34, 200))h5.Visible=true end;
 gK:GetPropertyChangedSignal("Text"):Connect(function()hi(gK.Text)end)local hl=ew.Bubble or ew.BubbleIcon or ew.FloatIcon or ew.OpenIcon;
 local hm=56;
-local hn=fK~=""and fK or"hub"local ho=UDim2.new(0.89, 0, 0.17, 0)local hp="Draggable"local hq=nil;
+local hn=fK~=""and fK or"rbxassetid://131946786209484"local ho=UDim2.new(0.89, 0, 0.17, 0)local hp="Draggable"local hq=nil;
 local hr=Vector2.new(0, 0)local function hs(a_)local av=string.lower(tostring(a_ or""))if av=="topbar"or av=="topbarplus"or av=="roblox"or av=="roblox topbar"then return"Topbar"end;
 return"Draggable"end;
 if type(ew.BubbleType)=="string"then hp=hs(ew.BubbleType)end;
@@ -2534,7 +2678,7 @@ if hl.Type~=nil then hp=hs(hl.Type)end;
 if hl.Title~=nil then hq=tostring(hl.Title)end;
 if typeof(hl.Offset)=="Vector2"then hr=hl.Offset end elseif hl~=nil and hl~=false and hl~=""then hn=hl end;
 local ht=_:Create("TextButton", {
-    Name="OpenClose", Text="", AutoButtonColor=false, BackgroundColor3=Z.Dark, BorderSizePixel=0, Position=ho, Size=UDim2.new(0, hm, 0, hm), Visible=false
+    Name="OpenClose", Text="", AutoButtonColor=false, BackgroundColor3=Z.Dark, BorderSizePixel=0, Position=ho, Size=UDim2.new(0, hm, 0, hm), Visible=true, ZIndex=150
 }
 
 , fX)_:Corner(ht, 11)local hu=_:Stroke(ht, Z.White, 0.32, 1.3)local hw=nil;
@@ -2543,15 +2687,15 @@ local hy=function()end;
 local function hz(g8)hx=g8;
 hy()if hw then hw:Destroy()end;
 hw=_:Create("Frame", {
-    BackgroundTransparency=1, BorderSizePixel=0, ClipsDescendants=true, Size=UDim2.new(1, 0, 1, 0), Name="BubbleContent"
+    BackgroundTransparency=1, BorderSizePixel=0, ClipsDescendants=true, Size=UDim2.new(1, 0, 1, 0), ZIndex=151, Name="BubbleContent"
 }
 
 , ht)_:Corner(hw, 8)local ek=_:MakeIcon(hw, g8, {
-    AnchorPoint=Vector2.new(0.5, 0.5), Position=UDim2.new(0.5, 0, 0.5, 0), Size=UDim2.new(0, math.floor(hm*0.52), 0, math.floor(hm*0.52)), Color=Z.White, Name="BubbleIcon"
+    AnchorPoint=Vector2.new(0.5, 0.5), Position=UDim2.new(0.5, 0, 0.5, 0), Size=UDim2.new(0, math.floor(hm*0.52), 0, math.floor(hm*0.52)), Color=Z.White, ZIndex=151, Name="BubbleIcon"
 }
 
 )if not ek then ek=_:MakeIcon(hw, "hub", {
-    AnchorPoint=Vector2.new(0.5, 0.5), Position=UDim2.new(0.5, 0, 0.5, 0), Size=UDim2.new(0, math.floor(hm*0.52), 0, math.floor(hm*0.52)), Color=Z.White, Name="BubbleIcon"
+    AnchorPoint=Vector2.new(0.5, 0.5), Position=UDim2.new(0.5, 0, 0.5, 0), Size=UDim2.new(0, math.floor(hm*0.52), 0, math.floor(hm*0.52)), Color=Z.White, ZIndex=151, Name="BubbleIcon"
 }
 
 )elseif ek.Kind=="image"then ek.Instance.AnchorPoint=Vector2.new(0, 0)ek.Instance.Position=UDim2.new(0, 0, 0, 0)ek.Instance.Size=UDim2.new(1, 0, 1, 0)ek.Image.ScaleType=Enum.ScaleType.Fit end end;
@@ -2580,7 +2724,7 @@ if math.abs(aq.X)+math.abs(aq.Y)>6 then hG=true end;
 if hG then ht.Position=UDim2.new(hF.X.Scale, hF.X.Offset+aq.X, hF.Y.Scale, hF.Y.Offset+aq.Y)hA()end end end))local hH=function()end;
 local function hI(eP)if fP then return end;
 fQ=eP;
-hH()if eP then ht.Visible=false;
+hH()if eP then ht.Visible=hp=="Draggable";
 fZ.Visible=true;
 _:Tween(f_, 0.3, {
     Scale=ch
@@ -2759,10 +2903,12 @@ hK.Visible=true;
 ht.Visible=false;
 ig()task.defer(ig)hH()else if hJ then hJ.Enabled=false;
 hK.Visible=false end;
-ht.Visible=not fQ and not fP end end;
-ir(hp)ht.Activated:Connect(function()if hG then hG=false;
-return end;
-hI(true)end)gC.Activated:Connect(function()ar(gC)hI(false)end)fR(d.InputBegan:Connect(function(it, iu)if iu then return end;
+-- The draggable floating launcher remains on screen while the main window is open.
+ht.Visible=not fP end end;
+ir(hp)ht.Activated:Connect(function()
+    if hG then hG=false; return end
+    hI(not fQ)
+end)gC.Activated:Connect(function()ar(gC)hI(false)end)fR(d.InputBegan:Connect(function(it, iu)if iu then return end;
 if it.KeyCode==fJ then hI(not fQ)end end))local iv,
 iw,
 ix=false,
@@ -4700,6 +4846,21 @@ fL.VLHColorPicker=fL.ColorPicker
 fL.VLHSetTitle=fL.SetTitle
 fL.VLHSetDescription=fL.SetDescription
 fL.VLHOpenDiscord=fL.OpenDiscord
+-- Footer customization API: Window:VLHFooter() returns an editable footer builder.
+fL.Footer=footerApi
+function fL:VLHFooter(options)
+    options=options or {}
+    if type(options)~="table" then options={Text=tostring(options)} end
+    if options.Clear==true then footerApi:Clear() end
+    if options.Text~=nil then footerApi:AddText({Text=options.Text,Color=options.TextColor,TextSize=options.TextSize,Bold=options.Bold}) end
+    if options.Badge~=nil then footerApi:AddBadge(type(options.Badge)=="table" and options.Badge or {Text=options.Badge}) end
+    if options.Button~=nil then footerApi:AddButton(type(options.Button)=="table" and options.Button or {Text=options.Button,Callback=options.Callback}) end
+    if options.Visible~=nil then footerApi:SetVisible(options.Visible) end
+    if options.Background~=nil or options.BackgroundTransparency~=nil then footerApi:SetBarBackground(options.Background,options.BackgroundTransparency) end
+    if options.Height~=nil then footerApi:SetBarHeight(options.Height) end
+    return footerApi
+end
+fL.VLHSetFooter=function(self,options) return self:VLHFooter(options) end
 fL.VLHDestroy=fL.Destroy
 return fL end;
 eq.VLHCreateWindow=eq.CreateWindow
