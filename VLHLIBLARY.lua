@@ -1,4 +1,4 @@
- -- Veloria Hub UI Library | VLH Monochrome Interface
+ -- Veloria Hub UI Library | VLH
 local a=game:GetService("Players")local b=game:GetService("RunService")local c=game:GetService("TweenService")local d=game:GetService("UserInputService")local e=game:GetService("VirtualUser")local f=game:GetService("HttpService")local g=game:GetService("TextService")local h=game:GetService("GuiService")local i=a.LocalPlayer;
 local function j()if identifyexecutor then local k,
 l=pcall(identifyexecutor)if k and l then return tostring(l)end end;
@@ -293,7 +293,7 @@ _.DefaultIcon="rbxassetid://131946786209484"_.GradientWhite=ColorSequence.new( {
 }
 
 )_.GradientWindow=ColorSequence.new( {
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(8, 8, 8)), ColorSequenceKeypoint.new(0.55, Color3.fromRGB(20, 20, 20)), ColorSequenceKeypoint.new(1, Color3.fromRGB(38, 38, 38))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(3, 3, 3)), ColorSequenceKeypoint.new(0.55, Color3.fromRGB(9, 9, 9)), ColorSequenceKeypoint.new(1, Color3.fromRGB(17, 17, 17))
 }
 
 )_.GradientLine=ColorSequence.new( {
@@ -343,28 +343,29 @@ for x,
 l in pairs(a1)do ae[x]=l end;
 return _:Create("TextLabel", ae, a2)end;
 function _:Card(a2, af, a0, ag)local ah=_:Create(ag and"TextButton"or"Frame", {
-    BackgroundColor3=Z.White, BackgroundTransparency=0.93, BorderSizePixel=0, Size=UDim2.new(1, 0, 0, af), Name=a0
+    BackgroundColor3=Color3.fromRGB(19, 19, 19), BackgroundTransparency=0.04,
+    BorderSizePixel=0, Size=UDim2.new(1, 0, 0, af), Name=a0
 }
 
 , nil)if ag then ah.AutoButtonColor=false;
 ah.Text=""end;
-_:Corner(ah, 7)local ai=_:Stroke(ah, Z.White, 0.92, 1)ah.Parent=a2;
+_:Corner(ah, 8)local ai=_:Stroke(ah, Color3.fromRGB(76, 76, 76), 0.78, 1)ah.Parent=a2;
 return ah,
 ai end;
 function _:Hover(ah, ai)ah.MouseEnter:Connect(function()_:Tween(ah, 0.15, {
-    BackgroundTransparency=0.88
+    BackgroundTransparency=0.01
 }
 
 )_:Tween(ai, 0.15, {
-    Transparency=0.7
+    Transparency=0.48
 }
 
 )end)ah.MouseLeave:Connect(function()_:Tween(ah, 0.2, {
-    BackgroundTransparency=0.93
+    BackgroundTransparency=0.04
 }
 
 )_:Tween(ai, 0.2, {
-    Transparency=0.92
+    Transparency=0.78
 }
 
 )end)end;
@@ -2107,15 +2108,7 @@ local fZ=_:Create("Frame", {
     BackgroundColor3=Z.White, BackgroundTransparency=0.02, BorderSizePixel=0, ClipsDescendants=true, Size=UDim2.new(1, 0, 1, 0), ZIndex=1, Name="Main"
 }
 
-, fZ)_:Corner(g0, 12)_:AddGradient(g0, 125, _.GradientWindow)local g1=_:Stroke(g0, Z.White, 0.25, 1.5)local g2=_:AddGradient(g1, 0, _.GradientBorder)fS(g2, {
-    Rotation=360
-}
-
-, 6)fS(g1, {
-    Transparency=0.75
-}
-
-, 2, true, Enum.EasingStyle.Sine)local g3=_:Create("ImageLabel", {
+, fZ)_:Corner(g0, 12)_:AddGradient(g0, 125, _.GradientWindow)local g1=_:Stroke(g0, Color3.fromRGB(72, 72, 72), 0.62, 1)local g3=_:Create("ImageLabel", {
     BackgroundTransparency=1, BorderSizePixel=0, Size=UDim2.new(1, 0, 1, 0), ZIndex=0, ScaleType=Enum.ScaleType.Crop, ImageTransparency=0.35, Visible=false, Name="Background"
 }
 
@@ -2380,7 +2373,8 @@ gB.MouseEnter:Connect(function()_:Tween(gB, 0.15, {
 )end)if ew.Tags or ew[7]then for I,
 gF in ipairs(ew.Tags or ew[7])do gm:Add(gF)end end;
 local gG=_:Create("Frame", {
-    BackgroundTransparency=1, BorderSizePixel=0, Position=UDim2.new(0, 8, 0, 64), Size=UDim2.new(0, fH, 1, -124), Name="LayersTab"
+    BackgroundColor3=Color3.fromRGB(5, 5, 5), BackgroundTransparency=0.08,
+    BorderSizePixel=0, Position=UDim2.new(0, 8, 0, 64), Size=UDim2.new(0, fH, 1, -124), Name="LayersTab"
 }
 
 , g0)local gH=_:Create("Frame", {
@@ -2480,11 +2474,12 @@ local g_=_:Label(gV, {
 )
 -- Custom VLHFooter content lives in the open center area of the bottom bar.
 local gFooterItems=_:Create("Frame", {
-    BackgroundTransparency=1, BorderSizePixel=0, Position=UDim2.new(0, 214, 0, 0),
-    Size=UDim2.new(1, -322, 1, 0), Name="VLHFooterContent"
+    AnchorPoint=Vector2.new(0.5, 0), BackgroundTransparency=1, BorderSizePixel=0,
+    Position=UDim2.new(0.5, 0, 0, 0), Size=UDim2.new(1, -320, 1, 0),
+    Name="VLHFooterContent"
 }, gV)
 local gFooterLayout=_:Create("UIListLayout", {
-    FillDirection=Enum.FillDirection.Horizontal, HorizontalAlignment=Enum.HorizontalAlignment.Left,
+    FillDirection=Enum.FillDirection.Horizontal, HorizontalAlignment=Enum.HorizontalAlignment.Center,
     VerticalAlignment=Enum.VerticalAlignment.Center, SortOrder=Enum.SortOrder.LayoutOrder,
     Padding=UDim.new(0, 8)
 }, gFooterItems)
@@ -2596,6 +2591,52 @@ fR(b.RenderStepped:Connect(function(dt)
         gFpsFrames,gFpsElapsed=0,0
     end
 end))
+-- Invisible resize grip. It remains visually absent but captures mouse/touch drags.
+local resizeEnabled=ew.Resizable~=false and ew.Resize~=false and ew.ResizeHandle~=false
+local resizeHandle=_:Create("TextButton", {
+    Name="VLHResizeHitbox", Text="", AutoButtonColor=false,
+    BackgroundTransparency=1, BorderSizePixel=0, Active=true,
+    AnchorPoint=Vector2.new(1,1), Position=UDim2.new(1,0,1,0),
+    Size=UDim2.fromOffset(18,18), Visible=resizeEnabled, ZIndex=90
+}, g0)
+local resizeDragging=false
+local resizeStartPointer=nil
+local resizeStartSize=nil
+local function clampWindowSize(width,height)
+    local camera=workspace.CurrentCamera
+    local viewport=camera and camera.ViewportSize or Vector2.new(1280,720)
+    local maxWidth=math.max(520, viewport.X-36)
+    local maxHeight=math.max(340, viewport.Y-36)
+    return Vector2.new(
+        math.clamp(width, 520, math.min(1400,maxWidth)),
+        math.clamp(height, 340, math.min(1000,maxHeight))
+    )
+end
+resizeHandle.InputBegan:Connect(function(input)
+    if not resizeEnabled then return end
+    if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+        resizeDragging=true
+        resizeStartPointer=Vector2.new(input.Position.X,input.Position.Y)
+        resizeStartSize=fZ.AbsoluteSize/math.max(ch,0.01)
+        input.Changed:Connect(function()
+            if input.UserInputState==Enum.UserInputState.End then resizeDragging=false end
+        end)
+    end
+end)
+fR(d.InputChanged:Connect(function(input)
+    if not resizeDragging or not resizeStartPointer or not resizeStartSize then return end
+    if input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch then
+        local pointer=Vector2.new(input.Position.X,input.Position.Y)
+        local delta=pointer-resizeStartPointer
+        local size=clampWindowSize(resizeStartSize.X+delta.X/math.max(ch,0.01),resizeStartSize.Y+delta.Y/math.max(ch,0.01))
+        fZ.Size=UDim2.fromOffset(math.floor(size.X),math.floor(size.Y))
+    end
+end))
+fR(d.InputEnded:Connect(function(input)
+    if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+        resizeDragging=false
+    end
+end))
 local h0=nil;
 local function h1(a0)gS=gR(a0)local co=gQ[gS]gV.Size=UDim2.new(1, 0, 0, co.Footer)gY.Size=UDim2.new(0, co.Avatar, 0, co.Avatar)g_.Position=UDim2.new(0, co.Avatar+22, 0, 0)g_.Size=UDim2.new(0, 148, 1, 0)g_.TextSize=co.Text;
 gO.Size=UDim2.new(1, 0, 1, -16)end;
@@ -2702,10 +2743,13 @@ if hl.Type~=nil then hp=hs(hl.Type)end;
 if hl.Title~=nil then hq=tostring(hl.Title)end;
 if typeof(hl.Offset)=="Vector2"then hr=hl.Offset end elseif hl~=nil and hl~=false and hl~=""then hn=resolveVLHIcon(hl) end;
 local ht=_:Create("TextButton", {
-    Name="OpenClose", Text="", AutoButtonColor=false, BackgroundColor3=Z.Dark, BorderSizePixel=0, Position=ho, Size=UDim2.new(0, hm, 0, hm), Visible=true, ZIndex=150
+    Name="OpenClose", Text="", AutoButtonColor=false,
+    BackgroundColor3=Color3.fromRGB(5, 5, 5), BackgroundTransparency=0.02,
+    BorderSizePixel=0, Position=ho, Size=UDim2.new(0, hm, 0, hm),
+    Visible=true, ZIndex=150, ClipsDescendants=true
 }
 
-, fX)_:Corner(ht, 11)local hu=_:Stroke(ht, Z.White, 0.32, 1.3)local hw=nil;
+, fX)_:Corner(ht, 14)local hu=_:Stroke(ht, Color3.fromRGB(100, 100, 100), 0.68, 1)local hw=nil;
 local hx=hn;
 local hy=function()end;
 local function hz(g8)hx=g8;
@@ -2723,7 +2767,16 @@ hw=_:Create("Frame", {
 }
 
 )elseif ek.Kind=="image"then ek.Instance.AnchorPoint=Vector2.new(0, 0)ek.Instance.Position=UDim2.new(0, 0, 0, 0)ek.Instance.Size=UDim2.new(1, 0, 1, 0)ek.Image.ScaleType=Enum.ScaleType.Fit end end;
-hz(hn)local function hA()local hB=fX.AbsoluteSize;
+hz(hn)
+ht.MouseEnter:Connect(function()
+    _:Tween(ht, 0.14, {BackgroundColor3=Color3.fromRGB(17,17,17)})
+    _:Tween(hu, 0.14, {Transparency=0.48})
+end)
+ht.MouseLeave:Connect(function()
+    _:Tween(ht, 0.18, {BackgroundColor3=Color3.fromRGB(5,5,5)})
+    _:Tween(hu, 0.18, {Transparency=0.68})
+end)
+local function hA()local hB=fX.AbsoluteSize;
 local aw,
 hC=ht.AbsolutePosition,
 ht.AbsoluteSize;
@@ -3030,11 +3083,103 @@ local iO=_:Create("Frame", {
     BackgroundTransparency=1, BorderSizePixel=0, LayoutOrder=iK, Size=UDim2.new(1, 0, 0, 26), Name="TabDivider"
 }
 
-, gO)_:Label(iO, {
+, activeTabGroup and activeTabGroup.Holder or gO)_:Label(iO, {
     Font=Enum.Font.GothamBold, Text=string.upper(tostring(iN or"")), TextColor3=Z.Sub, TextSize=10, Position=UDim2.new(0, 8, 0, 6), Size=UDim2.new(1, -8, 0, 12), Name="DividerLabel"
 }
 
 )return iO end;
+
+-- Sidebar groups: call AddTabGroup, then add tabs to the active group.
+-- Example: Window:AddTabGroup("Features", {Collapsible=true})
+local activeTabGroup=nil
+local tabGroups={}
+function fL:AddTabGroup(name, options)
+    options=type(options)=="table" and options or {}
+    name=tostring(name or options.Name or "Group")
+    iK=iK+1
+    local groupFrame=_:Create("Frame", {
+        BackgroundTransparency=1, BorderSizePixel=0, AutomaticSize=Enum.AutomaticSize.Y,
+        Size=UDim2.new(1,0,0,0), LayoutOrder=iK, Name="VLHTabGroup_"..name
+    }, gO)
+    _:Create("UIListLayout", {
+        FillDirection=Enum.FillDirection.Vertical, SortOrder=Enum.SortOrder.LayoutOrder,
+        Padding=UDim.new(0,2)
+    }, groupFrame)
+    local header=_:Create("TextButton", {
+        Text="", AutoButtonColor=false, BackgroundTransparency=1, BorderSizePixel=0,
+        Size=UDim2.new(1,0,0,25), LayoutOrder=1, Name="GroupHeader"
+    }, groupFrame)
+    local title=_:Label(header, {
+        Font=Enum.Font.GothamMedium, Text=name, TextColor3=options.Color or Z.Sub,
+        TextSize=11, TextTruncate=Enum.TextTruncate.AtEnd,
+        Position=UDim2.new(0,9,0,0), Size=UDim2.new(1,-30,1,0), Name="GroupTitle"
+    })
+    local collapsible=options.Collapsible~=false
+    local arrow
+    if collapsible then
+        arrow=_:MakeIcon(header,"chevron-down",{
+            AnchorPoint=Vector2.new(1,0.5), Position=UDim2.new(1,-9,0.5,0),
+            Size=UDim2.new(0,13,0,13), Color=Z.Sub, Name="GroupArrow"
+        })
+    end
+    local holder=_:Create("Frame", {
+        BackgroundTransparency=1, BorderSizePixel=0, AutomaticSize=Enum.AutomaticSize.Y,
+        Size=UDim2.new(1,0,0,0), LayoutOrder=2, Name="GroupTabs"
+    }, groupFrame)
+    _:Create("UIListLayout", {
+        FillDirection=Enum.FillDirection.Vertical, SortOrder=Enum.SortOrder.LayoutOrder,
+        Padding=UDim.new(0,3)
+    }, holder)
+    local group={Name=name,Frame=groupFrame,Header=header,Holder=holder,Collapsed=options.Collapsed==true}
+    function group:SetCollapsed(value)
+        if not collapsible then return end
+        self.Collapsed=value==true
+        holder.Visible=not self.Collapsed
+        if arrow and arrow.Instance then
+            arrow.Instance.Rotation=self.Collapsed and 0 or 180
+        end
+    end
+    function group:Expand() self:SetCollapsed(false) end
+    function group:Collapse() self:SetCollapsed(true) end
+    function group:Toggle() self:SetCollapsed(not self.Collapsed) end
+    function group:AddTab(config)
+        local previous=activeTabGroup
+        activeTabGroup=self
+        local tab=fL:AddTab(config)
+        activeTabGroup=previous
+        return tab
+    end
+    function group:AddDivider(text)
+        local label=_:Label(holder, {
+            Font=Enum.Font.Gotham, Text=tostring(text or ""), TextColor3=Z.Sub,
+            TextSize=9, Position=UDim2.new(0,10,0,0), Size=UDim2.new(1,-10,0,18),
+            Name="GroupDivider"
+        })
+        label.LayoutOrder=#holder:GetChildren()+1
+        return label
+    end
+    if collapsible then
+        header.Activated:Connect(function() group:Toggle() end)
+        header.MouseEnter:Connect(function() title.TextColor3=Z.Text end)
+        header.MouseLeave:Connect(function() title.TextColor3=options.Color or Z.Sub end)
+    end
+    group:SetCollapsed(options.Collapsed==true)
+    activeTabGroup=group
+    tabGroups[name]=group
+    return group
+end
+function fL:ClearTabGroup()
+    activeTabGroup=nil
+end
+function fL:GetTabGroup(name)
+    return tabGroups[tostring(name)]
+end
+-- Category is the visible sidebar heading. Tabs created after AddCategory
+-- are placed underneath it until another category is selected or cleared.
+fL.AddCategory=fL.AddTabGroup
+fL.Category=fL.AddTabGroup
+fL.VLHCategory=fL.AddTabGroup
+fL.VLHAddCategory=fL.AddTabGroup
 function fL:SelectTab(e9)for P,
 c3 in ipairs(iI)do if c3.Name==e9 or P==e9 then c3.Select()return true end end;
 return false end;
@@ -3126,6 +3271,25 @@ function fL:SetScale(j1)ch=math.clamp(tonumber(j1)or ch, 0.5, 1.5)if fQ and not 
 )end;
 for I,
 j2 in ipairs(iL)do pcall(j2)end end;
+function fL:SetWindowSize(size)
+    if typeof(size)=="UDim2" then
+        fZ.Size=size
+        return true
+    elseif typeof(size)=="Vector2" then
+        local clamped=clampWindowSize(size.X,size.Y)
+        fZ.Size=UDim2.fromOffset(clamped.X,clamped.Y)
+        return true
+    end
+    return false
+end
+function fL:SetResizable(value)
+    resizeEnabled=value~=false
+    resizeHandle.Visible=resizeEnabled
+    return resizeEnabled
+end
+function fL:GetWindowSize()
+    return fZ.AbsoluteSize
+end
 local function j3(aN)local cg,
 hY,
 c5=aN.R,
@@ -3738,13 +3902,15 @@ if k8.Toggle~=nil then k4:BindToggle(k8.Toggle)end;
 if k8.Open==true then kH(true)end;
 return k4 end;
 function fL:AddTab(ew)local kO=ew[1]or ew.Name or ew.Title or"Tab"local kP=ew[2]or ew.Icon or""local kQ=type(ew.__Detached)=="table"and ew.__Detached or nil;
+local requestedGroup=ew.Group or ew.Category
+local kGroup=(type(requestedGroup)=="table" and requestedGroup.Holder and requestedGroup) or (type(requestedGroup)=="string" and tabGroups[requestedGroup]) or activeTabGroup
 local h6=kQ and function()end or h6;
 iK=iK+1;
 local kR=_:Create("TextButton", {
     Text="", AutoButtonColor=false, BackgroundTransparency=1, BorderSizePixel=0, ClipsDescendants=true, LayoutOrder=iK, Size=UDim2.new(1, 0, 0, 36), Name=kO.."TabBtn"
 }
 
-, kQ and kQ.Holder or gO)_:Corner(kR, 7)local kS=_:Create("Frame", {
+, kQ and kQ.Holder or (kGroup and kGroup.Holder) or gO)_:Corner(kR, 7)local kS=_:Create("Frame", {
     BackgroundColor3=Z.White, BackgroundTransparency=1, BorderSizePixel=0, Size=UDim2.new(1, 0, 1, 0), Name="Fill"
 }
 
@@ -3776,7 +3942,8 @@ local kW=_:Label(kR, {
 , kX)local kY= {
     Frame=kX,
     Button=kR,
-    Name=kO
+    Name=kO,
+    Group=kGroup
 }
 
 kR.MouseEnter:Connect(function()if iJ~=kY then _:Tween(kS, 0.15, {
@@ -3835,10 +4002,10 @@ function kY:AddSection(kA)if type(kA)=="string"then kA= {
 
 end;
 local l0=kA[1]or kA.Name or kA.Title or"Section"local l1=_:Create("Frame", {
-    BackgroundColor3=Z.White, BackgroundTransparency=0.95, BorderSizePixel=0, AutomaticSize=Enum.AutomaticSize.Y, Size=UDim2.new(1, 0, 0, 0), LayoutOrder=#kX: GetChildren(), Name=l0 .."Section"
+    BackgroundColor3=Color3.fromRGB(12, 12, 12), BackgroundTransparency=0.04, BorderSizePixel=0, AutomaticSize=Enum.AutomaticSize.Y, Size=UDim2.new(1, 0, 0, 0), LayoutOrder=#kX: GetChildren(), Name=l0 .."Section"
 }
 
-, kX)_:Corner(l1, 9)local l2=_:Stroke(l1, Z.White, 0.93, 1)_:Create("UIListLayout", {
+, kX)_:Corner(l1, 9)local l2=_:Stroke(l1, Color3.fromRGB(66, 66, 66), 0.82, 1)_:Create("UIListLayout", {
     Padding=UDim.new(0, 0), SortOrder=Enum.SortOrder.LayoutOrder
 }
 
@@ -3920,7 +4087,7 @@ if ln~=false and ln~=""then lo=_:MakeIcon(lk, ln, {
 )end;
 if not lo then lm.Size=lj and UDim2.new(1, -20, 0, 14)or UDim2.new(1, -20, 1, 0)end;
 if lo then lk.MouseEnter:Connect(function()lo.SetColor(Z.White, true)end)lk.MouseLeave:Connect(function()lo.SetColor(Z.Sub, true)end)end;
-_:Hover(lk, ll)lk.Activated:Connect(function()ar(lk)task.spawn(li)end)h6(lg, lk, ld, k_, la, kX)return {
+_:Hover(lk, ll)lk.Activated:Connect(function()ar(lk)task.spawn(li)end)h6(lg, lk, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)return {
     Button=lk,
     SetText=function(n)lm.Text=tostring(n)end,
     SetIcon=function(g8)if lo then lo.Destroy()lo=nil end;
@@ -3979,7 +4146,7 @@ lx.Transparency=lF;
 lz.Position=lD;
 lz.BackgroundColor3=lE end end;
 lB(cL, false)_:Hover(lt, lu)lt.Activated:Connect(function()ar(lt)lB(not lA, true)if lr then lr:SetOpen(lA)end;
-task.spawn(li, lA)end)h6(lq, lt, ld, k_, la, kX)local kN= {
+task.spawn(li, lA)end)h6(lq, lt, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)local kN= {
     Toggle=lt,
     Set=function(eP)eP=eP and true or false;
     lB(eP, true)if lr then lr: SetOpen(eP)end;
@@ -4056,7 +4223,7 @@ _:Tween(lX, 0.12, {
 }
 
 )end;
-dP.InputBegan:Connect(function(P)if P.UserInputType==Enum.UserInputType.MouseButton1 or P.UserInputType==Enum.UserInputType.Touch then m2(true)k2(P)end end)fR(d.InputChanged:Connect(function(P)if iv and(P.UserInputType==Enum.UserInputType.MouseMovement or P.UserInputType==Enum.UserInputType.Touch)then k2(P)end end))fR(d.InputEnded:Connect(function(P)if iv and(P.UserInputType==Enum.UserInputType.MouseButton1 or P.UserInputType==Enum.UserInputType.Touch)then m2(false)end end))_:Hover(lR, lS)h6(lH, lR, ld, k_, la, kX)return {
+dP.InputBegan:Connect(function(P)if P.UserInputType==Enum.UserInputType.MouseButton1 or P.UserInputType==Enum.UserInputType.Touch then m2(true)k2(P)end end)fR(d.InputChanged:Connect(function(P)if iv and(P.UserInputType==Enum.UserInputType.MouseMovement or P.UserInputType==Enum.UserInputType.Touch)then k2(P)end end))fR(d.InputEnded:Connect(function(P)if iv and(P.UserInputType==Enum.UserInputType.MouseButton1 or P.UserInputType==Enum.UserInputType.Touch)then m2(false)end end))_:Hover(lR, lS)h6(lH, lR, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)return {
     Slider=lR,
     Set=function(fc)lT=lP(tonumber(fc)or lI)jS(lT, true)task.spawn(li, lT)end,
     Get=function()return lT end
@@ -4094,7 +4261,7 @@ m7.Focused:Connect(function()_:Tween(m8, 0.15, {
     Transparency=0.92
 }
 
-)task.spawn(li, m7.Text)end)h6(m4, m5, ld, k_, la, kX)return {
+)task.spawn(li, m7.Text)end)h6(m4, m5, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)return {
     Input=m7,
     Set=function(cR)m7.Text=tostring(cR)end,
     Get=function()return m7.Text end
@@ -4144,7 +4311,7 @@ local di=_:Create("Frame", {
     BackgroundColor3=Z.White, BackgroundTransparency=0.92, BorderSizePixel=0, Position=UDim2.new(0, 8, 0, 0), Size=UDim2.new(1, -16, 0, 1), Name="Divider"
 }
 
-, di)local mt=#mc>7 or ma.Filter==true;
+, di)local mt=#mc>7 or ma.Filter==true or ma.Search==true or ma.Searchable==true or ma.EnableSearch==true;
 local mu=mt and mn+4 or 0;
 local mv;
 if mt then mv=_:Create("TextBox", {
@@ -4345,7 +4512,7 @@ mq.MouseEnter:Connect(function()if not mx then _:Tween(mp, 0.15, {
     Transparency=0.92
 }
 
-)end end)mq.Activated:Connect(function()ar(mq)mP(not mx)end)h6(mb, mo, ld, k_, la, kX)return {
+)end end)mq.Activated:Connect(function()ar(mq)mP(not mx)end)h6(mb, mo, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)return {
     Dropdown=mo,
     Set=function(fc)local a_=mS(fc)if#a_>0 then local n9=false;
     for I,
@@ -4364,6 +4531,214 @@ mq.MouseEnter:Connect(function()if not mx then _:Tween(mp, 0.15, {
 }
 
 end;
+
+function le:AddSearchDropdown(config)
+    config=type(config)=="table" and config or {Name=tostring(config or "Search Dropdown")}
+    local copy={}
+    for key,value in pairs(config) do copy[key]=value end
+    copy.Search=true
+    copy.Filter=true
+    return self:AddDropdown(copy)
+end
+function le:AddMultiDropdown(config)
+    config=type(config)=="table" and config or {Name=tostring(config or "Multi Dropdown")}
+    local copy={}
+    for key,value in pairs(config) do copy[key]=value end
+    copy.Multi=true
+    copy.Search=true
+    copy.Filter=true
+    return self:AddDropdown(copy)
+end
+
+-- Two-level dropdown: child options depend on selected parent option(s).
+-- Both levels support search and multi-select independently.
+function le:AddDoubleDropdown(config)
+    config=type(config)=="table" and config or {}
+    local firstConfig=type(config.First)=="table" and config.First or {}
+    local secondConfig=type(config.Second)=="table" and config.Second or {}
+    local firstName=firstConfig.Name or config.FirstName or "Category"
+    local secondName=secondConfig.Name or config.SecondName or "Options"
+    local firstOptions=firstConfig.Options or config.FirstOptions or {}
+    local optionMap=config.OptionsByParent or config.Children or secondConfig.OptionsByParent or {}
+    local globalSecondOptions=secondConfig.Options or config.SecondOptions
+    local firstControl,secondControl
+    local firstMulti=firstConfig.Multi
+    if firstMulti==nil then firstMulti=config.FirstMulti end
+    if firstMulti==nil then firstMulti=config.Multi end
+    local secondMulti=secondConfig.Multi
+    if secondMulti==nil then secondMulti=config.SecondMulti end
+    if secondMulti==nil then secondMulti=config.Multi end
+
+    local function valuesOf(value)
+        if type(value)=="table" then
+            local result={}
+            for _,item in ipairs(value) do result[#result+1]=tostring(item) end
+            return result
+        end
+        if value==nil or value=="" then return {} end
+        return {tostring(value)}
+    end
+
+    local function resolveChildOptions(selectedParents)
+        if type(config.GetOptions)=="function" then
+            local ok,result=pcall(config.GetOptions,selectedParents)
+            if ok and type(result)=="table" then return result end
+        end
+        local result,seen={},{}
+        if type(globalSecondOptions)=="table" then
+            for _,item in ipairs(globalSecondOptions) do
+                local key=tostring(item)
+                if not seen[key] then seen[key]=true; result[#result+1]=item end
+            end
+            return result
+        end
+        for _,parent in ipairs(selectedParents) do
+            local children=optionMap[parent]
+            if type(children)=="table" then
+                for _,item in ipairs(children) do
+                    local key=tostring(item)
+                    if not seen[key] then seen[key]=true; result[#result+1]=item end
+                end
+            end
+        end
+        return result
+    end
+
+    local function notifyCombined(source)
+        if type(config.Callback)=="function" then
+            task.spawn(config.Callback, firstControl and firstControl:Get() or {}, secondControl and secondControl:Get() or {}, source)
+        end
+    end
+
+    firstControl=self:AddDropdown({
+        Name=firstName,
+        Options=firstOptions,
+        Default=firstConfig.Default or config.FirstDefault,
+        Multi=firstMulti==true,
+        Max=firstConfig.Max or config.FirstMax,
+        Search=true,
+        Filter=true,
+        Callback=function(selected)
+            local available=resolveChildOptions(valuesOf(selected))
+            if secondControl then
+                secondControl:Refresh(available,false)
+                notifyCombined("First")
+            end
+            if type(firstConfig.Callback)=="function" then task.spawn(firstConfig.Callback,selected) end
+        end
+    })
+
+    secondControl=self:AddDropdown({
+        Name=secondName,
+        Options={},
+        Default=nil,
+        Multi=secondMulti==true,
+        Max=secondConfig.Max or config.SecondMax,
+        Search=true,
+        Filter=true,
+        Empty=secondConfig.Empty or config.Empty or "Choose a category first",
+        Callback=function(selected)
+            if type(secondConfig.Callback)=="function" then task.spawn(secondConfig.Callback,selected) end
+            notifyCombined("Second")
+        end
+    })
+
+    local initialOptions=resolveChildOptions(valuesOf(firstControl:Get()))
+    secondControl:Refresh(initialOptions,false)
+
+    return {
+        First=firstControl,
+        Second=secondControl,
+        Get=function()
+            return firstControl:Get(),secondControl:Get()
+        end,
+        Set=function(parentValue,childValue)
+            firstControl:Set(parentValue)
+            secondControl:Refresh(resolveChildOptions(valuesOf(firstControl:Get())),false)
+            if childValue~=nil then secondControl:Set(childValue) end
+        end,
+        Refresh=function(newOptions)
+            if type(newOptions)=="table" then optionMap=newOptions end
+            secondControl:Refresh(resolveChildOptions(valuesOf(firstControl:Get())),false)
+        end,
+        Open=function() firstControl:Open(); secondControl:Open() end,
+        Close=function() firstControl:Close(); secondControl:Close() end,
+        Destroy=function()
+            if firstControl.Dropdown and firstControl.Dropdown.Parent then firstControl.Dropdown:Destroy() end
+            if secondControl.Dropdown and secondControl.Dropdown.Parent then secondControl.Dropdown:Destroy() end
+        end
+    }
+end
+
+-- Media tile for logos, square/cube artwork, landscape banners and custom sizes.
+-- Image accepts a Roblox asset id, rbxasset URI, or supported custom image URL.
+function le:AddMedia(config)
+    config=type(config)=="table" and config or {}
+    local source=config.Image or config.ImageId or config.AssetId or config.RobloxId or config.CustomLink or config.URL or config.Url or config.Source
+    local shape=string.lower(tostring(config.Shape or config.Type or "Rectangle"))
+    local width=math.max(32,tonumber(config.Width) or (shape=="cube" and 124 or 320))
+    local height=math.max(32,tonumber(config.Height) or (shape=="cube" and width or (shape=="rectangle" and 112 or 120)))
+    local outerSize
+    if typeof(config.Size)=="UDim2" then
+        outerSize=config.Size
+    elseif shape=="cube" or shape=="square" then
+        outerSize=UDim2.fromOffset(width,width)
+        height=width
+    elseif shape=="rectangle" or shape=="banner" or shape=="landscape" then
+        outerSize=UDim2.new(1,0,0,height)
+    else
+        outerSize=UDim2.fromOffset(width,height)
+    end
+    local card=_:Create("Frame", {
+        Name=config.Name or "VLHMedia",
+        BackgroundColor3=config.BackgroundColor or Z.Field,
+        BackgroundTransparency=tonumber(config.BackgroundTransparency) or 0.12,
+        BorderSizePixel=0, ClipsDescendants=true, Size=outerSize
+    }, l7)
+    local radius=tonumber(config.CornerRadius)
+    if radius==nil then radius=(shape=="cube" and 8 or 9) end
+    _:Corner(card,radius)
+    if config.Border~=false then _:Stroke(card,config.BorderColor or Color3.fromRGB(70,70,70),tonumber(config.BorderTransparency) or 0.72,1) end
+    local image=_:Create("ImageLabel", {
+        Name="MediaImage", BackgroundTransparency=1, BorderSizePixel=0,
+        Position=UDim2.new(0,0,0,0), Size=UDim2.new(1,0,1,0),
+        Image="", ImageTransparency=tonumber(config.ImageTransparency) or 0,
+        ScaleType=(string.lower(tostring(config.Fit or "cover"))=="contain" and Enum.ScaleType.Fit)
+            or (string.lower(tostring(config.Fit or "cover"))=="stretch" and Enum.ScaleType.Stretch)
+            or Enum.ScaleType.Crop
+    },card)
+    if source~=nil and source~="" then _:SetImage(image,source) end
+    local caption
+    if config.Caption and tostring(config.Caption)~="" then
+        caption=_:Label(card, {
+            Name="MediaCaption", Text=tostring(config.Caption),
+            Font=Enum.Font.GothamMedium, TextColor3=config.CaptionColor or Z.Text,
+            TextSize=tonumber(config.CaptionSize) or 10,
+            TextXAlignment=Enum.TextXAlignment.Left,
+            BackgroundColor3=Color3.fromRGB(0,0,0), BackgroundTransparency=0.3,
+            Position=UDim2.new(0,0,1,-24), Size=UDim2.new(1,0,0,24)
+        })
+        _:Create("UIPadding",{PaddingLeft=UDim.new(0,9),PaddingRight=UDim.new(0,9)},caption)
+    end
+    if string.lower(tostring(config.Position or config.Side or "Bottom"))=="top" then
+        card.LayoutOrder=-1000+lb
+    else
+        lc(card)
+    end
+    local media={Frame=card,Image=image,Caption=caption}
+    function media:SetImage(value)
+        return _:SetImage(image,value)
+    end
+    function media:SetVisible(value) card.Visible=value~=false end
+    function media:SetCaption(value)
+        if caption then caption.Text=tostring(value or "") end
+    end
+    function media:Destroy() if card.Parent then card:Destroy() end end
+    return media
+end
+le.AddBanner=le.AddMedia
+le.AddLogo=le.AddMedia
+
 function le:AddKeybind(nc)local nd=nc[1]or nc.Name or"Keybind"local ne=nc[2]or nc.Default or Enum.KeyCode.E;
 local li=nc[3]or nc.Callback or function()end;
 if type(ne)=="string"then ne=Enum.KeyCode[ne]or Enum.KeyCode.E end;
@@ -4401,7 +4776,7 @@ if P.UserInputType==Enum.UserInputType.Keyboard then nl=false;
 if nm then nm:Disconnect()nm=nil end;
 if P.KeyCode==Enum.KeyCode.Escape then nn()else no(P.KeyCode)end end end))end)if nj then fR(d.InputBegan:Connect(function(P, iu)if iu or nl then return end;
 if P.UserInputType==Enum.UserInputType.Keyboard and P.KeyCode==nk then task.spawn(nj, nk)end end))end;
-_:Hover(nf, ng)h6(nd, nf, ld, k_, la, kX)return {
+_:Hover(nf, ng)h6(nd, nf, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)return {
     Keybind=nf,
     Set=function(cF)if type(cF)=="string"then local k,
     l=pcall(function()return Enum.KeyCode[cF]end)cF=k and l or nil end;
@@ -4512,7 +4887,7 @@ local k=pcall(function()game:GetService("GuiService"):OpenBrowserWindow(nF)end)i
     Content="Link copied: "..nF
 }
 
-)end end)h6(nE, hf, ld, k_, la, kX)return {
+)end end)h6(nE, hf, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)return {
     Social=hf
 }
 
@@ -4542,7 +4917,7 @@ nM=_:Card(l7, 28, nJ.."Copy", false)lc(nL)_:Label(nL, {
     Content="Clipboard is not supported by your executor"
 }
 
-)end end)_:Hover(nL, nM)h6(nJ, nL, ld, k_, la, kX)return {
+)end end)_:Hover(nL, nM)h6(nJ, nL, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)return {
     CopyGroup=nL,
     Set=function(cR)nK=tostring(cR)end
 }
@@ -4631,7 +5006,7 @@ lZ.Text=tostring(math.floor(o4*100+0.5)).."%"_:Tween(lC, 0.25, {
 }
 
 )end;
-o3(o0)_:Hover(nu, kj)h6(n_, nu, ld, k_, la, kX)return {
+o3(o0)_:Hover(nu, kj)h6(n_, nu, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)return {
     Progress=nu,
     Set=o3,
     Get=function()return fc end
@@ -4830,6 +5205,13 @@ le.VLHToggle=le.AddToggle
 le.VLHSlider=le.AddSlider
 le.VLHInput=le.AddInput
 le.VLHDropdown=le.AddDropdown
+le.VLHSearchDropdown=le.AddSearchDropdown
+le.VLHMultiDropdown=le.AddMultiDropdown
+le.VLHDoubleDropdown=le.AddDoubleDropdown
+le.VLHAddDoubleDropdown=le.AddDoubleDropdown
+le.VLHMedia=le.AddMedia
+le.VLHBanner=le.AddBanner
+le.VLHLogo=le.AddLogo
 le.VLHKeybind=le.AddKeybind
 le.VLHParagraph=le.AddParagraph
 le.VLHReadMe=le.AddReadMe
@@ -4862,6 +5244,17 @@ function fL:OpenDiscord()
 end
 fL.VLHAddTabDivider=fL.AddTabDivider
 fL.VLHTabDivider=fL.AddTabDivider
+fL.VLHAddTabGroup=fL.AddTabGroup
+fL.VLHTabGroup=fL.AddTabGroup
+fL.AddCategory=fL.AddTabGroup
+fL.Category=fL.AddTabGroup
+fL.VLHCategory=fL.AddTabGroup
+fL.VLHAddCategory=fL.AddTabGroup
+fL.VLHSetWindowSize=fL.SetWindowSize
+fL.VLHSetResizable=fL.SetResizable
+fL.VLHGetWindowSize=fL.GetWindowSize
+fL.VLHClearTabGroup=fL.ClearTabGroup
+fL.VLHGetTabGroup=fL.GetTabGroup
 fL.VLHTab=fL.AddTab
 fL.VLHSelectTab=fL.SelectTab
 fL.VLHDialog=fL.Dialog
