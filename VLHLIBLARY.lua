@@ -2732,7 +2732,7 @@ task.wait(0.3)if hk.TargetFrame then _:Highlight(hk.TargetFrame)end end)end)end;
 h5.Size=UDim2.new(1, 0, 0, math.min(#hj*34, 200))h5.Visible=true end;
 gK:GetPropertyChangedSignal("Text"):Connect(function()hi(gK.Text)end)local hl=ew.Bubble or ew.BubbleIcon or ew.FloatIcon or ew.OpenIcon;
 local hm=56;
-local hn=fK~=""and fK or VLH_FLOAT_ICONlocal ho=UDim2.new(0.89, 0, 0.17, 0)local hp="Draggable"local hq=nil;
+local hn=VLH_FLOAT_ICONlocal ho=UDim2.new(0.89, 0, 0.17, 0)local hp="Draggable"local hq=nil;
 local hr=Vector2.new(0, 0)local function hs(a_)local av=string.lower(tostring(a_ or""))if av=="topbar"or av=="topbarplus"or av=="roblox"or av=="roblox topbar"then return"Topbar"end;
 return"Draggable"end;
 if type(ew.BubbleType)=="string"then hp=hs(ew.BubbleType)end;
@@ -2744,21 +2744,21 @@ if hl.Title~=nil then hq=tostring(hl.Title)end;
 if typeof(hl.Offset)=="Vector2"then hr=hl.Offset end end;
 local ht=_:Create("TextButton", {
     Name="OpenClose", Text="", AutoButtonColor=false,
-    BackgroundColor3=Color3.fromRGB(5, 5, 5), BackgroundTransparency=0.02,
+    BackgroundColor3=Color3.fromRGB(5, 5, 5), BackgroundTransparency=1,
     BorderSizePixel=0, Position=ho, Size=UDim2.new(0, hm, 0, hm),
-    Visible=true, ZIndex=150, ClipsDescendants=true
+    Visible=true, ZIndex=150, ClipsDescendants=false
 }
 
-, fX)_:Corner(ht, 14)local hu=_:Stroke(ht, Color3.fromRGB(100, 100, 100), 0.68, 1)local hw=nil;
+, fX)local hw=nil;
 local hx=hn;
 local hy=function()end;
 local function hz(g8)hx=g8;
 hy()if hw then hw:Destroy()end;
 hw=_:Create("Frame", {
-    BackgroundTransparency=1, BorderSizePixel=0, ClipsDescendants=true, Size=UDim2.new(1, 0, 1, 0), ZIndex=151, Name="BubbleContent"
+    BackgroundTransparency=1, BorderSizePixel=0, ClipsDescendants=false, Size=UDim2.new(1, 0, 1, 0), ZIndex=151, Name="BubbleContent"
 }
 
-, ht)_:Corner(hw, 8)local ek=_:MakeIcon(hw, g8, {
+, ht)local ek=_:MakeIcon(hw, g8, {
     AnchorPoint=Vector2.new(0.5, 0.5), Position=UDim2.new(0.5, 0, 0.5, 0), Size=UDim2.new(0, math.floor(hm*0.52), 0, math.floor(hm*0.52)), Color=Z.White, ZIndex=151, Name="BubbleIcon"
 }
 
@@ -2768,14 +2768,9 @@ hw=_:Create("Frame", {
 
 )elseif ek.Kind=="image"then ek.Instance.AnchorPoint=Vector2.new(0, 0)ek.Instance.Position=UDim2.new(0, 0, 0, 0)ek.Instance.Size=UDim2.new(1, 0, 1, 0)ek.Image.ScaleType=Enum.ScaleType.Fit end end;
 hz(hn)
-ht.MouseEnter:Connect(function()
-    _:Tween(ht, 0.14, {BackgroundColor3=Color3.fromRGB(17,17,17)})
-    _:Tween(hu, 0.14, {Transparency=0.48})
-end)
-ht.MouseLeave:Connect(function()
-    _:Tween(ht, 0.18, {BackgroundColor3=Color3.fromRGB(5,5,5)})
-    _:Tween(hu, 0.18, {Transparency=0.68})
-end)
+-- Keep the floating launcher fully transparent, including on hover.
+ht.MouseEnter:Connect(function() end)
+ht.MouseLeave:Connect(function() end)
 local function hA()local hB=fX.AbsoluteSize;
 local aw,
 hC=ht.AbsolutePosition,
