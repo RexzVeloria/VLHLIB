@@ -1,6 +1,9 @@
 -- tertawa tapi terluka -_-
 -- Rexz Is Boss
  -- Veloria Hub libua
+-- tertawa tapi terluka -_-
+-- Rexz Is Boss
+ -- Veloria Hub libua
 local a=game:GetService("Players")local b=game:GetService("RunService")local c=game:GetService("TweenService")local d=game:GetService("UserInputService")local e=game:GetService("VirtualUser")local f=game:GetService("HttpService")local g=game:GetService("TextService")local h=game:GetService("GuiService")local i=a.LocalPlayer;
 local function j()if identifyexecutor then local k,
 l=pcall(identifyexecutor)if k and l then return tostring(l)end end;
@@ -2754,7 +2757,7 @@ local ht=_:Create("TextButton", {
 , fX)local hw=nil;
 local hx=hn;
 local hy=function()end;
-local function hz(g8)hx=g8;
+local function hz(g8)g8=VLH_FLOAT_ICON;hx=g8;
 hy()if hw then hw:Destroy()end;
 hw=_:Create("Frame", {
     BackgroundTransparency=1, BorderSizePixel=0, ClipsDescendants=false, Size=UDim2.new(1, 0, 1, 0), ZIndex=151, Name="BubbleContent"
@@ -2764,7 +2767,7 @@ hw=_:Create("Frame", {
     AnchorPoint=Vector2.new(0.5, 0.5), Position=UDim2.new(0.5, 0, 0.5, 0), Size=UDim2.new(0, math.floor(hm*0.52), 0, math.floor(hm*0.52)), Color=Z.White, ZIndex=151, Name="BubbleIcon"
 }
 
-)if not ek then ek=_:MakeIcon(hw, "hub", {
+)if not ek then ek=_:MakeIcon(hw, VLH_FLOAT_ICON, {
     AnchorPoint=Vector2.new(0.5, 0.5), Position=UDim2.new(0.5, 0, 0.5, 0), Size=UDim2.new(0, math.floor(hm*0.52), 0, math.floor(hm*0.52)), Color=Z.White, ZIndex=151, Name="BubbleIcon"
 }
 
