@@ -1,3 +1,4 @@
+-- SAWIT
 -- tertawa tapi terluka -_-
 -- Rexz Is Boss
 local a=game:GetService("Players")local b=game:GetService("RunService")local c=game:GetService("TweenService")local d=game:GetService("UserInputService")local e=game:GetService("VirtualUser")local f=game:GetService("HttpService")local g=game:GetService("TextService")local h=game:GetService("GuiService")local i=a.LocalPlayer;
@@ -330,7 +331,13 @@ function _:Stroke(a3, a7, a8, a9)return _:Create("UIStroke", {
 }
 
 , a3)end;
-function _:Tween(a3, aa, a1, ab, ac)local ad=c:Create(a3, TweenInfo.new(aa, ab or Enum.EasingStyle.Quad, ac or Enum.EasingDirection.Out), a1)ad:Play()return ad end;
+-- Keep interactions responsive and subtle; no bouncing transitions.
+function _:Tween(a3, aa, a1, ab, ac)
+    local duration=math.min(tonumber(aa) or 0.08, 0.10)
+    local ad=c:Create(a3, TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), a1)
+    ad:Play()
+    return ad
+end;
 function _:Label(a2, a1)local ae= {
     Font=Enum.Font.GothamBold,
     TextColor3=Z.Text,
@@ -343,7 +350,11 @@ function _:Label(a2, a1)local ae= {
 for x,
 l in pairs(a1)do ae[x]=l end;
 return _:Create("TextLabel", ae, a2)end;
-function _:Card(a2, af, a0, ag)local ah=_:Create(ag and"TextButton"or"Frame", {
+function _:Card(a2, af, a0, ag)
+if a2 and a2:GetAttribute("VLHCompact") then
+    if af==42 then af=36 elseif af==54 then af=48 elseif af==46 then af=42 end
+end
+local ah=_:Create(ag and"TextButton"or"Frame", {
     BackgroundColor3=Color3.fromRGB(15, 15, 15), BackgroundTransparency=0,
     BorderSizePixel=0, Size=UDim2.new(1, 0, 0, af), Name=a0
 }
@@ -402,23 +413,9 @@ return game:GetService("CoreGui")end;
 function _:Decimals(ap)local aq=0;
 while aq<6 and math.abs(ap*10^aq-math.floor(ap*10^aq+0.5))>1e-7 do aq=aq+1 end;
 return aq end end;
-_:EnabledAFK()local function ar(as, at, au)task.spawn(function()if not as or not as.Parent then return end;
-if at==nil or au==nil then local k, av=pcall(function()return d:GetMouseLocation()end)if k and av then at, au=av.X, av.Y end end;
-local aw, ax=as.AbsolutePosition, as.AbsoluteSize;
-local ay=(at or aw.X+ax.X/2)-aw.X;
-local az=(au or aw.Y+ax.Y/2)-aw.Y;
-if ay<0 or az<0 or ay>ax.X or az>ax.Y then ay, az=ax.X/2, ax.Y/2 end;
-as.ClipsDescendants=true;
-local aA=_:Create("Frame", {
-    AnchorPoint=Vector2.new(0.5, 0.5), BackgroundColor3=Z.White, BackgroundTransparency=0.85, BorderSizePixel=0, Position=UDim2.new(0, ay, 0, az), Size=UDim2.new(0, 0, 0, 0), Name="Ripple"
-}
-
-, as)_:Round(aA)local aB=math.max(ax.X, ax.Y)*2.4;
-local aC=_:Tween(aA, 0.5, {
-    Size=UDim2.new(0, aB, 0, aB), BackgroundTransparency=1
-}
-
-)aC.Completed:Wait()aA:Destroy()end)end;
+_:EnabledAFK()
+-- The reference has no large click ripples.
+local function ar(as, at, au) end;
 local aD= {}
 
 aD.Data= {
@@ -2059,7 +2056,7 @@ function eq:Notify(ew)return self:SetNotification(ew)end;
 function eq:RegisterIcon(a0, d0)return aD:Register(a0, d0)end;
 function eq:HasIcon(a0)return aD:Resolve(a0)~=nil end;
 function eq:GetIcons()return aD:List()end;
-task.defer(function()if f0()then eq:GetAutoSave()eq:RescanConfigs()end end)function eq:CreateWindow(ew)local fF=ew[1]or ew.Title or"Veloria Hub"local fG=ew[2]or ew.Description or""local fH=ew[3]or ew["Tab Width"]or 144;
+task.defer(function()if f0()then eq:GetAutoSave()eq:RescanConfigs()end end)function eq:CreateWindow(ew)ew=ew or {} local compactMode=ew.Compact==true local fF=ew[1]or ew.Title or"Veloria Hub"local fG=ew[2]or ew.Description or""local fH=ew[3]or ew["Tab Width"]or 144;
 local fI=ew[4]or ew.SizeUi or UDim2.fromOffset(858, 560)local fJ=ew[5]or ew.Keybind or Enum.KeyCode.RightControl;
 local VLH_LOGO="rbxassetid://117785011367332"
 local VLH_FLOAT_ICON="rbxassetid://87349158369586"
@@ -2102,7 +2099,7 @@ local fZ=_:Create("Frame", {
 }
 
 , fX)local f_=_:Create("UIScale", {
-    Scale=ch*0.9
+    Scale=ch
 }
 
 , fZ)local g0=_:Create("Frame", {
@@ -2151,16 +2148,8 @@ local ci=_:Create("Frame", {
     BackgroundColor3=Z.White, BackgroundTransparency=1, BorderSizePixel=0, Position=UDim2.new(0, 0, 0, 54), Size=UDim2.new(1, 0, 0, 1), Name="DecideGlow"
 }
 
-, g0)local gb=_:Create("UIGradient", {
-    Color=_.GradientLine, Transparency=_.FadeEnds, Offset=Vector2.new(-1, 0)
-}
-
-, ga)fS(gb, {
-    Offset=Vector2.new(1, 0)
-}
-
-, 3)local gc=_:Create("Frame", {
-    BackgroundTransparency=1, BorderSizePixel=0, ClipsDescendants=true, Size=UDim2.new(0, fH+8, 1, 0), Name="TitleHolder"
+, g0)local gc=_:Create("Frame", {
+    BackgroundTransparency=1, BorderSizePixel=0, ClipsDescendants=true, Size=UDim2.new(0, fH+28, 1, 0), Name="TitleHolder"
 }
 
 , ci)_:Create("UIListLayout", {
@@ -2181,9 +2170,10 @@ if g8==nil or g8==""or g8==false then gd.Visible=false;
 gd.Size=UDim2.new(0,0,0,0)
 return end;
 g8=resolveVLHIcon(g8)
-gd.Size=UDim2.new(0,24,0,24)
+local headerLogoSize=math.clamp(tonumber(ew.HeaderLogoSize) or 32,24,40)
+gd.Size=UDim2.new(0,headerLogoSize,0,headerLogoSize)
 local ek=_:MakeIcon(gd, g8, {
-    Size=UDim2.new(0, 24, 0, 24), Color=Z.White, Name="Icon"
+    Size=UDim2.new(0, headerLogoSize, 0, headerLogoSize), Color=Z.White, Name="Icon"
 }
 
 )if ek then gd.Visible=true;
@@ -2194,9 +2184,9 @@ if headerIcon==nil then headerIcon=ew.TitleIcon or ew.DefaultIcon or ew.VLHIcon 
 ge(headerIcon) -- The default VLH mark sits immediately before the title.
 -- Left brand and centered game title, matching the reference layout.
 _:Label(gc, {
-    Text=tostring(ew.Brand or eq.Brand), TextColor3=Z.White, TextSize=12,
-    LayoutOrder=2, AutomaticSize=Enum.AutomaticSize.X,
-    Size=UDim2.new(0,0,0,18), Name="Brand"
+    Text=tostring(ew.Brand or eq.Brand), TextColor3=Z.White, TextSize=math.clamp(tonumber(ew.BrandSize) or 14, 11, 18),
+    TextTruncate=Enum.TextTruncate.AtEnd, LayoutOrder=2,
+    Size=UDim2.new(1,-54,0,22), Name="Brand"
 })
 local titleCenter=_:Create("Frame", {
     AnchorPoint=Vector2.new(0.5,0), Position=UDim2.new(0.5,0,0,0),
@@ -2204,13 +2194,13 @@ local titleCenter=_:Create("Frame", {
     BorderSizePixel=0, ClipsDescendants=true, Name="CenteredTitle"
 },ci)
 local gg=_:Label(titleCenter, {
-    Text=fF, TextColor3=Z.White, TextSize=12, TextXAlignment=Enum.TextXAlignment.Center,
+    Text=fF, TextColor3=Z.White, TextSize=math.clamp(tonumber(ew.TitleSize) or 14, 11, 20), TextXAlignment=Enum.TextXAlignment.Center,
     TextTruncate=Enum.TextTruncate.AtEnd, Position=UDim2.new(0,0,0,7),
     Size=UDim2.new(1,0,0,18), Name="Title"
 })
 local gh=_:Label(titleCenter, {Text="", Visible=false, Size=UDim2.new(0,0,0,0), Name="Separator"})
 local gi=_:Label(titleCenter, {
-    Font=Enum.Font.GothamMedium, Text=fG, TextColor3=Z.Sub, TextSize=11,
+    Font=Enum.Font.GothamMedium, Text=fG, TextColor3=Z.Sub, TextSize=12,
     TextXAlignment=Enum.TextXAlignment.Center, TextTruncate=Enum.TextTruncate.AtEnd,
     Position=UDim2.new(0,0,0,28), Size=UDim2.new(1,0,0,16), Name="Description"
 })
@@ -2261,7 +2251,7 @@ local gk=_:Create("Frame", {
     FillDirection=Enum.FillDirection.Horizontal, SortOrder=Enum.SortOrder.LayoutOrder, VerticalAlignment=Enum.VerticalAlignment.Center, Padding=UDim.new(0, 5)
 }
 
-, gk)local function gl()gc.Size=UDim2.new(0, fH+8, 1, 0)end;
+, gk)local function gl()gc.Size=UDim2.new(0, fH+28, 1, 0)end;
 gk:GetPropertyChangedSignal("AbsoluteSize"):Connect(gl)gl()local gm= {}
 
 local gn= {}
@@ -2587,6 +2577,9 @@ end
 if type(ew.VLHFooter)=="string" and ew.VLHFooter~="" then
     footerApi:AddText(ew.VLHFooter)
 end
+if ew.Version~=nil and tostring(ew.Version)~="" then
+    footerApi:AddBadge({Text=tostring(ew.Version), Background=Color3.fromRGB(23,23,23)})
+end
 -- No subscription or lifetime badge in the footer.
 -- Invisible resize grip. It remains visually absent but captures mouse/touch drags.
 local resizeEnabled=ew.Resizable~=false and ew.Resize~=false and ew.ResizeHandle~=false
@@ -2799,11 +2792,11 @@ _:Tween(f_, 0.3, {
     Scale=ch
 }
 
-, Enum.EasingStyle.Back, Enum.EasingDirection.Out)else _:Tween(f_, 0.15, {
-    Scale=ch*0.9
+, Enum.EasingStyle.Back, Enum.EasingDirection.Out)else _:Tween(f_, 0.1, {
+    Scale=ch
 }
 
-, Enum.EasingStyle.Quad, Enum.EasingDirection.In)task.delay(0.15, function()if fP or fQ then return end;
+, Enum.EasingStyle.Quad, Enum.EasingDirection.In)task.delay(0.1, function()if fP or fQ then return end;
 fZ.Visible=false;
 ht.Visible=hp=="Draggable"end)end end;
 local hJ,
@@ -3701,11 +3694,7 @@ local aj=_:Create("Frame", {
     AnchorPoint=Vector2.new(0.5, 0.5), BackgroundColor3=Z.White, BackgroundTransparency=0.02, BorderSizePixel=0, ClipsDescendants=true, Position=typeof(k8.Position)=="UDim2"and k8.Position or UDim2.new(0.5, 0, 0.5, 0), Size=UDim2.new(0, ka, 0, kb), Visible=false, ZIndex=2, Name="Popup"
 }
 
-, fX)_:Corner(aj, 10)_:AddGradient(aj, 125, _.GradientWindow)local kj=_:Stroke(aj, Z.White, 0.85, 1)local kk=_:AddGradient(kj, 0, _.GradientLine)local kl=fS(kk, {
-    Rotation=360
-}
-
-, 6)local km=_:Create("UIScale", {
+, fX)_:Corner(aj, 10)_:AddGradient(aj, 125, _.GradientWindow)local kj=_:Stroke(aj, Z.White, 0.85, 1)local kk=_:AddGradient(kj, 0, _.GradientLine)local kl=nil;local km=_:Create("UIScale", {
     Scale=ch*0.9
 }
 
@@ -3901,7 +3890,7 @@ function k4:Destroy()if kg then return end;
 kg=true;
 kf=false;
 kh=nil;
-pcall(function()kl:Cancel()end)pcall(function()aj:Destroy()end)end;
+if kl then pcall(function()kl:Cancel()end)end;pcall(function()aj:Destroy()end)end;
 k4.Frame=aj;
 k4.Content=ky.Frame;
 k4.Header=kn;
@@ -3944,7 +3933,7 @@ local kW=_:Label(kR, {
 }
 
 , kQ and kQ.Body or gN)_:Create("UIListLayout", {
-    Padding=UDim.new(0, 6), SortOrder=Enum.SortOrder.LayoutOrder
+    Padding=UDim.new(0, compactMode and 3 or 6), SortOrder=Enum.SortOrder.LayoutOrder
 }
 
 , kX)_:Create("UIPadding", {
@@ -4008,16 +3997,19 @@ kY.Label=kW;
 kY.IconImg=kU;
 kR.Activated:Connect(function()ar(kR)k_()end)kY.Select=k_;
 if not kQ then table.insert(iI, kY)if#iI==1 then k_()end end;
-function kY:AddSection(kA)if type(kA)=="string"then kA= {
+function kY:AddSection(kA)
+local sectionParent=self._SectionParent or kX
+local k_=self._SearchSelect or k_
+if type(kA)=="string"then kA= {
     kA
 }
 
 end;
 local l0=kA[1]or kA.Name or kA.Title or"Section"local l1=_:Create("Frame", {
-    BackgroundColor3=Color3.fromRGB(12, 12, 12), BackgroundTransparency=1, BorderSizePixel=0, AutomaticSize=Enum.AutomaticSize.Y, Size=UDim2.new(1, 0, 0, 0), LayoutOrder=#kX: GetChildren(), Name=l0 .."Section"
+    BackgroundColor3=Color3.fromRGB(12, 12, 12), BackgroundTransparency=1, BorderSizePixel=0, AutomaticSize=Enum.AutomaticSize.Y, Size=UDim2.new(1, 0, 0, 0), LayoutOrder=#sectionParent:GetChildren(), Name=l0 .."Section"
 }
 
-, kX)_:Corner(l1, 9)local l2=_:Stroke(l1, Color3.fromRGB(66, 66, 66), 1, 1)l2.Enabled=false;_:Create("UIListLayout", {
+, sectionParent)_:Corner(l1, 9)local l2=_:Stroke(l1, Color3.fromRGB(66, 66, 66), 1, 1)l2.Enabled=false;_:Create("UIListLayout", {
     Padding=UDim.new(0, 0), SortOrder=Enum.SortOrder.LayoutOrder
 }
 
@@ -4040,10 +4032,27 @@ b5 in ipairs( {
 
 , l4)_:Round(l5)end;
 local l6=_:Label(l3, {
-    Text=l0, TextColor3=Z.White, TextSize=13, TextTruncate=Enum.TextTruncate.AtEnd, Position=UDim2.new(0, 10, 0, 0), Size=UDim2.new(1, -32, 1, 0), Name="SectionTitle"
+    Text=l0, TextColor3=Z.White, TextSize=13, TextTruncate=Enum.TextTruncate.AtEnd, Position=UDim2.new(0, 10, 0, 0), Size=UDim2.new(1, -62, 1, 0), Name="SectionTitle"
 }
 
-)if kA.Flat==true then l1.BackgroundTransparency=1;
+)
+-- Info is optional: absent, empty, or whitespace-only means no button.
+local sectionInfo=type(kA.Info)=="string" and kA.Info or ""
+local infoButton=_:Create("TextButton", {
+    Name="SectionInfo", Text="!", Font=Enum.Font.GothamBold, TextSize=11,
+    TextColor3=Color3.fromRGB(91,175,235), AutoButtonColor=false,
+    BackgroundColor3=Z.Field, BorderSizePixel=0, AnchorPoint=Vector2.new(1,0.5),
+    Position=UDim2.new(1,-35,0.5,0), Size=UDim2.fromOffset(18,18),
+    Visible=sectionInfo:match("%S")~=nil, ZIndex=3
+},l3)
+_:Round(infoButton)_:Stroke(infoButton,Color3.fromRGB(91,175,235),0.2,1)
+l6.Size=UDim2.new(1,infoButton.Visible and -62 or -32,1,0)
+infoButton.Activated:Connect(function()
+    if sectionInfo:match("%S") then
+        fL:Dialog({Title=l6.Text, Content=sectionInfo})
+    end
+end)
+if kA.Flat==true then l1.BackgroundTransparency=1;
 l2.Enabled=false;
 l3.Visible=false;
 l3.Size=UDim2.new(1, 0, 0, 0)end;
@@ -4051,8 +4060,8 @@ local l7=_:Create("Frame", {
     BackgroundTransparency=1, BorderSizePixel=0, AutomaticSize=Enum.AutomaticSize.Y, LayoutOrder=2, Size=UDim2.new(1, 0, 0, 0), Name="SectionContent"
 }
 
-, l1)_:Create("UIListLayout", {
-    Padding=UDim.new(0, 4), SortOrder=Enum.SortOrder.LayoutOrder
+, l1)l7:SetAttribute("VLHCompact",compactMode)_:Create("UIListLayout", {
+    Padding=UDim.new(0, compactMode and 2 or 4), SortOrder=Enum.SortOrder.LayoutOrder
 }
 
 , l7)_:Create("UIPadding", {
@@ -4075,6 +4084,12 @@ ek.LayoutOrder=lb;
 return ek end;
 local ld=l0 .." > "..kO;
 local le= {}
+function le:SetInfo(value)
+    sectionInfo=type(value)=="string" and value or ""
+    infoButton.Visible=sectionInfo:match("%S")~=nil
+    l6.Size=UDim2.new(1,infoButton.Visible and -62 or -32,1,0)
+end
+le.VLHSetInfo=le.SetInfo
 
 function le:AddButton(lf)local lg=lf[1]or lf.Name or"Button"local lh=lf[2]or lf.Description or lf.Content or""local li=lf[3]or lf.Callback or function()end;
 if type(lh)=="function"then li=lh;
@@ -4099,8 +4114,37 @@ if ln~=false and ln~=""then lo=_:MakeIcon(lk, ln, {
 )end;
 if not lo then lm.Size=lj and UDim2.new(1, -20, 0, 14)or UDim2.new(1, -20, 1, 0)end;
 if lo then lk.MouseEnter:Connect(function()lo.SetColor(Z.White, true)end)lk.MouseLeave:Connect(function()lo.SetColor(Z.Sub, true)end)end;
-_:Hover(lk, ll)lk.Activated:Connect(function()ar(lk)task.spawn(li)end)h6(lg, lk, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)return {
+local busy=false
+local loadingMark=_:Label(lk,{Text="...", TextColor3=Color3.fromRGB(55,205,145),
+    TextSize=12, TextXAlignment=Enum.TextXAlignment.Center, AnchorPoint=Vector2.new(1,0.5),
+    Position=UDim2.new(1,-8,0.5,0), Size=UDim2.fromOffset(22,18), Visible=false, Name="LoadingMark"})
+local function setLoading(value)
+    busy=value==true
+    loadingMark.Visible=busy
+    if lo and lo.Instance then lo.Instance.Visible=not busy end
+end
+local function runButton()
+    if busy then return end
+    if lf.AutoLoading==true then setLoading(true) end
+    task.spawn(function()
+        local ok,err=pcall(li)
+        if lf.AutoLoading==true and lk.Parent then setLoading(false) end
+        if not ok then warn("[VLH] Button callback failed: "..tostring(err)) end
+    end)
+end
+_:Hover(lk, ll)lk.Activated:Connect(function()
+    if busy then return end
+    if lf.Confirm then
+        local confirm=type(lf.Confirm)=="table" and lf.Confirm or {}
+        local message=type(lf.Confirm)=="string" and lf.Confirm or confirm.Content or confirm.Message or "Are you sure?"
+        fL:Dialog({Title=confirm.Title or lg, Content=message, Buttons={
+            {confirm.CancelText or "Cancel"},
+            {confirm.ConfirmText or "Confirm", runButton, confirm.Danger==true}
+        }})
+    else runButton() end
+end)h6(lg, lk, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)return {
     Button=lk,
+    SetLoading=function(value)if lk.Parent then setLoading(value)end end,
     SetText=function(n)lm.Text=tostring(n)end,
     SetIcon=function(g8)if lo then lo.Destroy()lo=nil end;
     if g8 and g8~=""then lo=_:MakeIcon(lk, g8, {
@@ -4124,6 +4168,13 @@ lu=_:Card(l7, lj and 54 or 42, lq.."Toggle", true)lc(lt)local lv=_:Label(lt, {
 }
 
 )else lv.Size=UDim2.new(1, -58, 1, 0)end;
+local featureStatus=_:Create("Frame", {
+    Name="FeatureStatus", AnchorPoint=Vector2.new(1,0.5),
+    Position=UDim2.new(1,-52,0.5,0), Size=UDim2.fromOffset(6,6),
+    BackgroundColor3=Color3.fromRGB(90,90,90), BorderSizePixel=0,
+    Visible=lp.ShowStatus~=false
+},lt)
+_:Round(featureStatus)
 local lw=_:Create("Frame", {
     AnchorPoint=Vector2.new(1, 0.5), BackgroundColor3=Z.Off, BorderSizePixel=0, Position=UDim2.new(1, -10, 0.5, 0), Size=UDim2.new(0, 32, 0, 16), Name="SwitchBg"
 }
@@ -4138,6 +4189,7 @@ local lw=_:Create("Frame", {
 
 , lw)_:Round(lz)local lA=cL;
 local function lB(eP, eo)lA=eP;
+featureStatus.BackgroundColor3=eP and Color3.fromRGB(55,205,145) or Color3.fromRGB(90,90,90);
 local lC=eP and 0 or 1;
 local lD=eP and UDim2.new(1, -13, 0.5, 0)or UDim2.new(0, 3, 0.5, 0)local lE=eP and Color3.fromRGB(14, 14, 14)or Z.Sub;
 local lF=eP and 1 or 0.85;
@@ -4160,6 +4212,7 @@ lz.BackgroundColor3=lE end end;
 lB(cL, false)_:Hover(lt, lu)lt.Activated:Connect(function()ar(lt)lB(not lA, true)if lr then lr:SetOpen(lA)end;
 task.spawn(li, lA)end)h6(lq, lt, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)local kN= {
     Toggle=lt,
+    Status=featureStatus,
     Set=function(eP)eP=eP and true or false;
     lB(eP, true)if lr then lr: SetOpen(eP)end;
     task.spawn(li, eP)end,
@@ -4296,18 +4349,18 @@ local md=ma.Multi==true or ma.Multiple==true or ma.MultiSelect==true;
 local me=tonumber(ma.Max)local mf=ma.Deletable==true;
 local mg=ma.OnDelete;
 local mh=ma.ConfirmDelete~=false;
-local mi=ma.DeleteIcon or"trash"local mj=ma.Empty;
+local mi=ma.DeleteIcon or"trash"local mj=ma.Empty or "Belum ada data";
 local dropdownDescription=tostring(ma.Description or ma.Content or "")
 local dropdownHasDescription=dropdownDescription~=""
 local mk,
 ml,
 mm,
-mn=dropdownHasDescription and 60 or 46,
+mn=dropdownHasDescription and 60 or (compactMode and 42 or 46),
 28,
 140,
 28;
 local mo,
-mp=_:Card(l7, mk, mb.."Dropdown", false)lc(mo)mo.ClipsDescendants=true;
+mp=_:Card(l7, dropdownHasDescription and mk or 46, mb.."Dropdown", false)lc(mo)mo.ClipsDescendants=true;
 local mq=_:Create("TextButton", {
     Text="", AutoButtonColor=false, BackgroundTransparency=1, BorderSizePixel=0, Size=UDim2.new(1, 0, 0, mk), Name="DropdownBtn"
 }
@@ -4943,15 +4996,12 @@ nM=_:Card(l7, 28, nJ.."Copy", false)lc(nL)_:Label(nL, {
     Transparency=0.85
 }
 
-)end)nN.Activated:Connect(function()ar(nN)if setclipboard then pcall(setclipboard, nK)eq:SetNotification( {
-    Content="Copied: "..nK
-}
-
-)else eq:SetNotification( {
-    Content="Clipboard is not supported by your executor"
-}
-
-)end end)_:Hover(nL, nM)h6(nJ, nL, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)return {
+)end)nN.Activated:Connect(function()
+    ar(nN)
+    local ok=false
+    if type(setclipboard)=="function" then ok=pcall(setclipboard,tostring(nK)) end
+    eq:SetNotification({Content=ok and "Copied to clipboard" or "Clipboard is unavailable"})
+end)_:Hover(nL, nM)h6(nJ, nL, ld, k_, function()if kY.Group then kY.Group:Expand()end;la()end, kX)return {
     CopyGroup=nL,
     Set=function(cR)nK=tostring(cR)end
 }
@@ -5215,11 +5265,80 @@ local oz=function(...)eq:MarkDirty()return oy(...)end;
 ox[ow]=oz;
 ox.Callback=oz;
 ov=ox end;
-local b8=ou(self, ov)local aj=b8[cF]b8.Frame=aj;
+local b8=ou(self, ov)local aj=b8[cF]if ot=="AddInput" and aj then aj=aj.Parent end;b8.Frame=aj;
 b8.SetVisible=function(eP)if aj and aj.Parent then aj.Visible=eP and true or false end end;
 local oA=type(ov)=="table"and ov.Flag or nil;
 b8.Destroy=function()if oA and eq.Elements[oA]and eq.Elements[oA].Owner==b8 then eq.Elements[oA]=nil end;
 if aj and aj.Parent then aj:Destroy()end end;
+local options=type(ov)=="table" and ov or {}
+local canReset=ot=="AddToggle" or ot=="AddSlider" or ot=="AddInput" or ot=="AddDropdown" or ot=="AddKeybind" or ot=="AddColorPicker"
+local defaultValue
+if ot=="AddToggle" then defaultValue=options[2]; if defaultValue==nil then defaultValue=options.Default end; defaultValue=defaultValue==true
+elseif ot=="AddSlider" then defaultValue=options[4]; if defaultValue==nil then defaultValue=options.Default end; if defaultValue==nil then defaultValue=options[2] or options.Min or 0 end
+elseif ot=="AddInput" then defaultValue=options[3]; if defaultValue==nil then defaultValue=options.Default or "" end
+elseif ot=="AddDropdown" then defaultValue=options[3]; if defaultValue==nil then defaultValue=options.Default end
+elseif ot=="AddKeybind" then defaultValue=options[2] or options.Default or Enum.KeyCode.E
+elseif ot=="AddColorPicker" then defaultValue=options[2] or options.Default or Color3.fromRGB(255,255,255) end
+if type(defaultValue)=="table" then local copy={} for n,v in ipairs(defaultValue) do copy[n]=v end defaultValue=copy end
+if canReset then
+    b8.Reset=function()
+        if ot=="AddDropdown" and defaultValue==nil then b8.Clear() else b8.Set(defaultValue) end
+        -- Input:Set intentionally does not run its callback; notify on a reset.
+        if ot=="AddInput" then local cb=options[4] or options.Callback; if type(cb)=="function" then task.spawn(cb,tostring(defaultValue)) end end
+    end
+end
+if aj and aj:IsA("GuiObject") then
+    local info=type(options.Info)=="string" and options.Info or ""
+    local hasInfo=info:match("%S")~=nil
+    local showReset=canReset and options.Reset==true
+    if hasInfo or showReset then
+        local controlsLeft=(ot=="AddInput" or ot=="AddDropdown") and 0.55 or 1
+        local baseOffset=(controlsLeft==1) and -82 or -24
+        local function smallAction(text, offset, color)
+            local action=_:Create("TextButton",{
+                Name=text=="!" and "FeatureInfo" or "FeatureReset", Text=text,
+                Font=Enum.Font.GothamBold, TextSize=10, TextColor3=color,
+                AutoButtonColor=false, BackgroundColor3=Z.Field, BorderSizePixel=0,
+                AnchorPoint=Vector2.new(1,0), Position=UDim2.new(controlsLeft,offset,0,4),
+                Size=UDim2.fromOffset(18,18), ZIndex=4
+            },aj)
+            _:Round(action)_:Stroke(action,color,0.5,1)
+            return action
+        end
+        if hasInfo then
+            local infoControl=smallAction("!",baseOffset,Color3.fromRGB(91,175,235))
+            infoControl.Activated:Connect(function()fL:Dialog({Title=tostring(options.Name or options[1] or "Info"),Content=info})end)
+            b8.InfoButton=infoControl
+        end
+        if showReset then
+            local resetControl=smallAction("↺",baseOffset-(hasInfo and 22 or 0),Z.Sub)
+            resetControl.Activated:Connect(function()b8.Reset()end)
+            b8.ResetButton=resetControl
+        end
+        -- Keep labels clear of optional controls when the card is narrow.
+        local used=(hasInfo and 22 or 0)+(showReset and 22 or 0)
+        for _,child in ipairs(aj:GetChildren()) do
+            if child:IsA("TextLabel") and (child.Name=="ToggleLabel" or child.Name=="ToggleDesc" or child.Name=="InputLabel" or child.Name=="InputDesc" or child.Name=="BtnLabel" or child.Name=="BtnDesc" or child.Name=="SliderLabel") then
+                local size=child.Size
+                child.Size=UDim2.new(size.X.Scale,size.X.Offset-used,size.Y.Scale,size.Y.Offset)
+            end
+        end
+        if ot=="AddDropdown" then
+            local header=aj:FindFirstChild("DropdownBtn")
+            if header then for _,child in ipairs(header:GetChildren()) do
+                if child:IsA("TextLabel") and (child.Name=="DdLabel" or child.Name=="DdDesc") then
+                    local size=child.Size
+                    child.Size=UDim2.new(size.X.Scale,size.X.Offset-used,size.Y.Scale,size.Y.Offset)
+                end
+            end end
+        end
+    end
+    if not b8.SetLoading then
+        local mark=_:Label(aj,{Name="LoadingMark",Text="...",TextColor3=Color3.fromRGB(55,205,145),TextSize=11,
+            AnchorPoint=Vector2.new(1,0),Position=UDim2.new(1,-4,0,1),Size=UDim2.fromOffset(18,14),Visible=false})
+        b8.SetLoading=function(value)if mark.Parent then mark.Visible=value==true end end
+    end
+end
 local cK=on[ot]if cK and oA then local oB=op[cK]local oC=oB[2]if cK=="color"then oC=function(l)local j8=string.match(tostring(l), "^#?(%x%x%x%x%x%x)$")if not j8 then return nil end;
 return Color3.fromRGB(tonumber(string.sub(j8, 1, 2), 16), tonumber(string.sub(j8, 3, 4), 16), tonumber(string.sub(j8, 5, 6), 16))end elseif cK=="keybind"then oC=function(l)local k,
 cF=pcall(function()return Enum.KeyCode[tostring(l)]end)return k and cF or nil end end;
@@ -5296,6 +5415,140 @@ le.VLHRow=le.AddRow
 function le:SetOpen(eP)l9(eP==true, true)end;
 function le:SetTitle(gz)l6.Text=tostring(gz)end;
 return le end;
+-- Optional horizontal sub-tabs. Normal tab sections continue to work as before.
+local subTabs={}
+local persistenceEnabled=ew.SaveSubTabs~=false
+local rememberKey=tostring(ew.SubTabKey or fF).."::"..tostring(kO)
+local rememberFile="VLH_SubTabs_"..tostring(i.UserId).."_"..tostring(game.PlaceId)..".json"
+eq._SubTabMemory=eq._SubTabMemory or {}
+if persistenceEnabled and not eq._SubTabMemoryLoaded then
+    eq._SubTabMemoryLoaded=true
+    if type(readfile)=="function" and type(isfile)=="function" then
+        pcall(function()
+            if isfile(rememberFile) then
+                local saved=f:JSONDecode(readfile(rememberFile))
+                if type(saved)=="table" then for key,value in pairs(saved) do
+                    if type(key)=="string" and type(value)=="string" then eq._SubTabMemory[key]=value end
+                end end
+            end
+        end)
+    end
+end
+local savedSubTab=persistenceEnabled and eq._SubTabMemory[rememberKey] or nil
+local function rememberSubTab(name)
+    if not persistenceEnabled then return end
+    eq._SubTabMemory[rememberKey]=name
+    if type(writefile)=="function" then pcall(function()writefile(rememberFile,f:JSONEncode(eq._SubTabMemory))end) end
+end
+local activeSubTab=nil
+local subTabBar=nil
+local subTabPages=nil
+local function ensureSubTabLayout()
+    if subTabBar then return end
+    subTabBar=_:Create("ScrollingFrame", {
+        Name="SubTabBar", Active=true, BackgroundTransparency=1, BorderSizePixel=0,
+        Size=UDim2.new(1,-2,0,38), LayoutOrder=0,
+        CanvasSize=UDim2.new(0,0,0,0), AutomaticCanvasSize=Enum.AutomaticSize.X,
+        ScrollingDirection=Enum.ScrollingDirection.X, ScrollBarThickness=0
+    },kX)
+    _:Create("UIListLayout", {
+        FillDirection=Enum.FillDirection.Horizontal, SortOrder=Enum.SortOrder.LayoutOrder,
+        VerticalAlignment=Enum.VerticalAlignment.Center, Padding=UDim.new(0,5)
+    },subTabBar)
+    subTabPages=_:Create("Frame", {
+        Name="SubTabPages", BackgroundTransparency=1, BorderSizePixel=0,
+        AutomaticSize=Enum.AutomaticSize.Y, Size=UDim2.new(1,0,0,0), LayoutOrder=1
+    },kX)
+    _:Create("UIListLayout", {SortOrder=Enum.SortOrder.LayoutOrder},subTabPages)
+end
+function kY:AddSubTab(config, icon)
+    config=normalizeVLHTabConfig(config,icon)
+    local name=tostring(config.Name or config.Title or config[1] or "Sub Tab")
+    local iconValue=config.Icon or config[2]
+    ensureSubTabLayout()
+    local button=_:Create("TextButton", {
+        Name="SubTab_"..name, Text="", AutoButtonColor=false,
+        BackgroundColor3=Color3.fromRGB(35,35,35), BackgroundTransparency=1,
+        BorderSizePixel=0, AutomaticSize=Enum.AutomaticSize.X,
+        Size=UDim2.new(0,0,0,32), LayoutOrder=#subTabs+1
+    },subTabBar)
+    _:Corner(button,16)
+    local outline=_:Stroke(button,Z.White,0.88,1)
+    outline.Enabled=false
+    _:Create("UIListLayout", {FillDirection=Enum.FillDirection.Horizontal,
+        SortOrder=Enum.SortOrder.LayoutOrder, VerticalAlignment=Enum.VerticalAlignment.Center,
+        Padding=UDim.new(0,6)},button)
+    _:Create("UIPadding", {PaddingLeft=UDim.new(0,12), PaddingRight=UDim.new(0,12)},button)
+    local iconObj=nil
+    if iconValue and iconValue~="" and iconValue~=false then
+        iconObj=_:MakeIcon(button,iconValue,{Size=UDim2.fromOffset(16,16),Color=Z.Sub,Name="SubTabIcon"})
+        if iconObj and iconObj.Instance then iconObj.Instance.LayoutOrder=1 end
+    end
+    local label=_:Label(button, {
+        Text=name, Font=Enum.Font.GothamBold, TextSize=11, TextColor3=Z.Sub,
+        AutomaticSize=Enum.AutomaticSize.X, Size=UDim2.new(0,0,0,18),
+        LayoutOrder=2, Name="SubTabLabel"
+    })
+    local badge=_:Create("TextLabel", {
+        Name="SubTabBadge", Font=Enum.Font.GothamBold, TextSize=9,
+        TextColor3=Z.Text, BackgroundColor3=Color3.fromRGB(55,55,55),
+        BorderSizePixel=0, AutomaticSize=Enum.AutomaticSize.X,
+        Size=UDim2.new(0,0,0,16), LayoutOrder=3, Visible=false, Text=""
+    },button)
+    _:Corner(badge,6)
+    _:Create("UIPadding",{PaddingLeft=UDim.new(0,5),PaddingRight=UDim.new(0,5)},badge)
+    local page=_:Create("Frame", {
+        Name="SubTabPage_"..name, BackgroundTransparency=1, BorderSizePixel=0,
+        AutomaticSize=Enum.AutomaticSize.Y, Size=UDim2.new(1,0,0,0),
+        LayoutOrder=#subTabs+1, Visible=false
+    },subTabPages)
+    _:Create("UIListLayout", {Padding=UDim.new(0,6),SortOrder=Enum.SortOrder.LayoutOrder},page)
+    local sub={Name=name, Button=button, Frame=page, _SectionParent=page}
+    local function selectSub(persist)
+        if activeSubTab then
+            activeSubTab.Frame.Visible=false
+            activeSubTab.Button.BackgroundTransparency=1
+            activeSubTab._Outline.Enabled=false
+            activeSubTab._Label.TextColor3=Z.Sub
+            if activeSubTab._Icon then activeSubTab._Icon.SetColor(Z.Sub,true) end
+        end
+        activeSubTab=sub
+        page.Visible=true
+        button.BackgroundTransparency=0
+        outline.Enabled=true
+        label.TextColor3=Color3.fromRGB(55,205,145)
+        if iconObj then iconObj.SetColor(Z.White,true) end
+        if persist~=false then rememberSubTab(name) end
+    end
+    function sub:SetBadge(value)
+        local text=value~=nil and tostring(value) or ""
+        badge.Text=text
+        badge.Visible=text:match("%S")~=nil
+    end
+    sub:SetBadge(config.Badge)
+    sub._Outline=outline
+    sub._Label=label
+    sub._Icon=iconObj
+    sub._SearchSelect=function() k_(); selectSub() end
+    function sub:AddSection(sectionConfig)
+        return kY.AddSection(self,sectionConfig)
+    end
+    sub.VLHSection=sub.AddSection
+    function sub:Select() k_(); selectSub() end
+    button.Activated:Connect(function() selectSub() end)
+    table.insert(subTabs,sub)
+    if #subTabs==1 or savedSubTab==name then selectSub(false) end
+    return sub
+end
+function kY:SelectSubTab(name)
+    for index,sub in ipairs(subTabs) do
+        if sub.Name==name or index==name then sub:Select(); return true end
+    end
+    return false
+end
+kY.VLHSubTab=kY.AddSubTab
+kY.VLHAddSubTab=kY.AddSubTab
+kY.VLHSelectSubTab=kY.SelectSubTab
 kY.VLHSection=kY.AddSection
 kY.VLHCustom=kY.AddCustom
 return kY end;
@@ -5333,7 +5586,46 @@ fL.VLHColorPicker=fL.ColorPicker
 fL.VLHSetTitle=fL.SetTitle
 fL.VLHSetDescription=fL.SetDescription
 fL.VLHOpenDiscord=fL.OpenDiscord
--- Footer text is configured only through CreateWindow({ VLHFooter = "..." }).
+-- Small caller-fed history panel. Nothing is collected automatically.
+function fL:CreateHistory(config)
+    config=type(config)=="table" and config or {}
+    local popup=fL:CreatePopup({Title=config.Title or "History", Icon=config.Icon or "history",
+        Width=config.Width or 300, Height=config.Height or 220, Position=config.Position})
+    if not popup then return nil end
+    local content=popup.Content
+    local empty=_:Label(content,{Name="HistoryEmpty", Text=tostring(config.Empty or "Belum ada data"),
+        TextSize=11, TextColor3=Z.Sub, TextXAlignment=Enum.TextXAlignment.Center,
+        LayoutOrder=1, Size=UDim2.new(1,-4,0,36)})
+    local entries={}
+    local maxEntries=math.clamp(tonumber(config.MaxEntries) or 30,1,100)
+    local serial=0
+    local history={Frame=popup.Frame,Popup=popup}
+    function history:Add(value, detail)
+        local title
+        if type(value)=="table" then title=tostring(value.Title or value.Name or "Activity"); detail=value.Detail or value.Description
+        else title=tostring(value or "Activity") end
+        serial=serial+1
+        local row=_:Card(content,detail and 48 or 36,"HistoryItem",false)
+        row.LayoutOrder=-serial
+        _:Label(row,{Text=title,TextSize=11,TextTruncate=Enum.TextTruncate.AtEnd,
+            Position=UDim2.new(0,10,0,detail and 5 or 0),Size=UDim2.new(1,-20,0,detail and 16 or 36)})
+        if detail then _:Label(row,{Text=tostring(detail),Font=Enum.Font.GothamMedium,TextColor3=Z.Sub,
+            TextSize=10,TextTruncate=Enum.TextTruncate.AtEnd,Position=UDim2.new(0,10,0,24),Size=UDim2.new(1,-20,0,16)}) end
+        table.insert(entries,row)
+        if #entries>maxEntries then local oldest=table.remove(entries,1); oldest:Destroy() end
+        empty.Visible=false
+        return row
+    end
+    function history:Clear() for _,row in ipairs(entries) do row:Destroy() end; entries={}; empty.Visible=true end
+    function history:Open()popup:Open()end
+    function history:Close()popup:Close()end
+    function history:Toggle()popup:Toggle()end
+    function history:Destroy()popup:Destroy()end
+    if config.Open==true then popup:Open() end
+    return history
+end
+fL.VLHHistory=fL.CreateHistory
+-- Footer text is configured through VLHFooter or Version in CreateWindow.
 fL.VLHDestroy=fL.Destroy
 return fL end;
 eq.VLHCreateWindow=eq.CreateWindow
