@@ -1,3 +1,4 @@
+-- Konnn
 -- tertawa tapi terluka -_-
 -- Rexz Is Boss
 local a=game:GetService("Players")local b=game:GetService("RunService")local c=game:GetService("TweenService")local d=game:GetService("UserInputService")local e=game:GetService("VirtualUser")local f=game:GetService("HttpService")local g=game:GetService("TextService")local h=game:GetService("GuiService")local i=a.LocalPlayer;
@@ -2059,7 +2060,517 @@ function eq:Notify(ew)return self:SetNotification(ew)end;
 function eq:RegisterIcon(a0, d0)return aD:Register(a0, d0)end;
 function eq:HasIcon(a0)return aD:Resolve(a0)~=nil end;
 function eq:GetIcons()return aD:List()end;
-task.defer(function()if f0()then eq:GetAutoSave()eq:RescanConfigs()end end)function eq:CreateWindow(ew)local fF=ew[1]or ew.Title or"Veloria Hub"local fG=ew[2]or ew.Description or""local fH=ew[3]or ew["Tab Width"]or 144;
+task.defer(function()if f0()then eq:GetAutoSave()eq:RescanConfigs()end end)
+-- ============================================================
+-- Floating Status Panel (VLH)
+-- Panel melayang independen: punya ScreenGui sendiri, jadi tetap
+-- tampil walau window utama ditutup / di-minimize ke bubble.
+-- ============================================================
+local vlhStatusGui=nil;
+local vlhStatusAll= {}
+
+local function vlhStatusLayer()if vlhStatusGui and vlhStatusGui.Parent then return vlhStatusGui end;
+vlhStatusGui=_:Create("ScreenGui", {
+    Name="VLHStatus", ZIndexBehavior=Enum.ZIndexBehavior.Sibling, ResetOnSpawn=false, IgnoreGuiInset=true, DisplayOrder=98
+}
+, _:GetGuiParent())return vlhStatusGui end;
+local function vlhFmtClock(cU)cU=math.max(math.floor(tonumber(cU)or 0), 0)local vh=math.floor(cU/3600)local vm=math.floor((cU%3600)/60)local vs=cU%60;
+if vh>0 then return string.format("%d:%02d:%02d", vh, vm, vs)end;
+return string.format("%02d:%02d", vm, vs)end;
+local function vlhReadPing()local ok, v=pcall(function()return game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()end)if ok and type(v)=="number"then return math.floor(v+0.5)end;
+return nil end;
+local function vlhReadMemory()local ok, v=pcall(collectgarbage, "count")if ok and type(v)=="number"then return v/1024 end;
+return nil end;
+local function vlhPlayerCount()local ok, v=pcall(function()return #a:GetPlayers()end)if ok and type(v)=="number"then return v end;
+return nil end;
+
+function eq:CreateStatus(cfg)
+    if type(cfg)=="string"then cfg= {cfg}end;
+    if type(cfg)~="table"then cfg= {}end;
+
+    local stTitle=tostring(cfg[1]or cfg.Title or cfg.Name or"Status")
+    local stWidth=math.clamp(tonumber(cfg.Width)or 212, 140, 460)
+    local stAccent=typeof(cfg.Accent)=="Color3"and cfg.Accent or Z.White;
+    local stRowH=math.clamp(tonumber(cfg.RowHeight)or 18, 12, 44)
+    local stDrag=cfg.Draggable~=false;
+    local stCollapsible=cfg.Collapsible~=false;
+    local stClickCollapse=stCollapsible and cfg.ClickToCollapse~=false;
+    local stClosable=cfg.Closable==true;
+    local stRate=math.clamp(tonumber(cfg.UpdateRate)or 0.5, 0.1, 5)
+    local stIconName=cfg.Icon;  if stIconName==nil then stIconName="activity"end;
+
+    local stConns= {}
+    local function stTrack(cn)if cn then stConns[#stConns+1]=cn end;
+    return cn end;
+
+    local api= {}
+    local stDead=false;
+
+    -- ---------- panel ----------
+    local stGui=vlhStatusLayer()
+    local stPanel=_:Create("Frame", {
+        Name="VLHStatusPanel", BackgroundColor3=Color3.fromRGB(13, 13, 13), BackgroundTransparency=math.clamp(tonumber(cfg.Transparency)or 0.08, 0, 1), BorderSizePixel=0, AutomaticSize=Enum.AutomaticSize.Y, ClipsDescendants=false, Active=true, Position=typeof(cfg.Position)=="UDim2"and cfg.Position or UDim2.new(0, 18, 0, 120), Size=UDim2.new(0, stWidth, 0, 0), Visible=cfg.Visible~=false, ZIndex=5
+    }
+    , stGui)
+    _:Corner(stPanel, 10)
+    local stStroke=_:Stroke(stPanel, Color3.fromRGB(70, 70, 70), 0.7, 1)
+    _:Create("UIListLayout", {
+        Padding=UDim.new(0, 0), SortOrder=Enum.SortOrder.LayoutOrder
+    }
+    , stPanel)
+
+    -- ---------- header ----------
+    local stHeader=_:Create("TextButton", {
+        Name="StatusHeader", Text="", AutoButtonColor=false, Active=true, BackgroundTransparency=1, BorderSizePixel=0, LayoutOrder=1, Size=UDim2.new(1, 0, 0, 30), ZIndex=6
+    }
+    , stPanel)
+
+    local stIcon=nil;
+    local stTitleLabel=_:Label(stHeader, {
+        Text=stTitle, TextColor3=Z.White, TextSize=12, TextTruncate=Enum.TextTruncate.AtEnd, Position=UDim2.new(0, 10, 0, 0), Size=UDim2.new(1, -56, 1, 0), ZIndex=7, Name="StatusTitle"
+    }
+    )
+
+    local function stRelayoutHead()
+        local lx=stIcon and 30 or 10;
+        local rx=10;
+        if stCollapsible then rx=rx+18 end;
+        if stClosable then rx=rx+22 end;
+        stTitleLabel.Position=UDim2.new(0, lx, 0, 0)
+        stTitleLabel.Size=UDim2.new(1, -(lx+rx), 1, 0)
+    end;
+
+    local function stSetIcon(nm)
+        if stIcon then pcall(function()stIcon.Destroy()end)stIcon=nil end;
+        if nm~=nil and nm~=false and nm~=""then
+            stIcon=_:MakeIcon(stHeader, nm, {
+                AnchorPoint=Vector2.new(0, 0.5), Position=UDim2.new(0, 10, 0.5, 0), Size=UDim2.new(0, 14, 0, 14), Color=stAccent, ZIndex=7, Name="StatusIcon"
+            }
+            )
+        end;
+        stRelayoutHead()
+    end;
+
+    local stArrow=nil;
+    if stCollapsible then
+        stArrow=_:Create("Frame", {
+            Name="StatusArrow", AnchorPoint=Vector2.new(1, 0.5), BackgroundTransparency=1, BorderSizePixel=0, Rotation=180, Position=UDim2.new(1, stClosable and -32 or -10, 0.5, 0), Size=UDim2.new(0, 12, 0, 12), ZIndex=7
+        }
+        , stHeader)
+        for ai, deg in ipairs( {45, -45} )do
+            local arm=_:Create("Frame", {
+                Name="Arm", AnchorPoint=Vector2.new(0.5, 0.5), BackgroundColor3=Z.Sub, BorderSizePixel=0, Position=UDim2.new(0.5, deg==45 and -2.2 or 2.2, 0.5, -1), Rotation=deg, Size=UDim2.new(0, 6, 0, 2), ZIndex=7
+            }
+            , stArrow)
+            _:Round(arm)
+        end;
+    end;
+
+    local stCloseBtn=nil;
+    if stClosable then
+        stCloseBtn=_:Create("TextButton", {
+            Name="StatusClose", Text="", AutoButtonColor=false, AnchorPoint=Vector2.new(1, 0.5), BackgroundTransparency=1, BorderSizePixel=0, Position=UDim2.new(1, -8, 0.5, 0), Size=UDim2.new(0, 18, 0, 18), ZIndex=7
+        }
+        , stHeader)
+        _:MakeIcon(stCloseBtn, "x", {
+            AnchorPoint=Vector2.new(0.5, 0.5), Position=UDim2.new(0.5, 0, 0.5, 0), Size=UDim2.new(0, 12, 0, 12), Color=Z.Sub, ZIndex=8, Name="CloseIcon"
+        }
+        )
+    end;
+
+    stSetIcon(stIconName)
+
+    -- ---------- body ----------
+    local stBody=_:Create("Frame", {
+        Name="StatusBody", BackgroundTransparency=1, BorderSizePixel=0, AutomaticSize=Enum.AutomaticSize.Y, LayoutOrder=2, Size=UDim2.new(1, 0, 0, 0), ZIndex=6
+    }
+    , stPanel)
+    _:Create("UIListLayout", {
+        Padding=UDim.new(0, 3), SortOrder=Enum.SortOrder.LayoutOrder
+    }
+    , stBody)
+    _:Create("UIPadding", {
+        PaddingLeft=UDim.new(0, 10), PaddingRight=UDim.new(0, 10), PaddingBottom=UDim.new(0, 10)
+    }
+    , stBody)
+
+    local stOrder=0;
+    local stItems= {}
+    local function stNextOrder()stOrder=stOrder+1;
+    return stOrder end;
+
+    -- ---------- row: item ----------
+    local function stAddItem(rc)
+        if stDead then return nil end;
+        if type(rc)=="string"then rc= {rc}end;
+        if type(rc)~="table"then rc= {}end;
+        local rName=tostring(rc[1]or rc.Name or rc.Label or"Item")
+        local rValue=rc[2];  if rValue==nil then rValue=rc.Value end;  if rValue==nil then rValue=""end;
+        local rRow=_:Create("Frame", {
+            Name="StatusRow", BackgroundTransparency=1, BorderSizePixel=0, LayoutOrder=tonumber(rc.Order)or stNextOrder(), Size=UDim2.new(1, 0, 0, stRowH), ZIndex=6
+        }
+        , stBody)
+        local rPad=0;
+        local rIcon=nil;
+        local rLabel, rVal;
+        local function rSetIcon(nm)
+            if rIcon then pcall(function()rIcon.Destroy()end)rIcon=nil end;
+            rPad=0;
+            if nm~=nil and nm~=false and nm~=""then
+                rIcon=_:MakeIcon(rRow, nm, {
+                    AnchorPoint=Vector2.new(0, 0.5), Position=UDim2.new(0, 0, 0.5, 0), Size=UDim2.new(0, 12, 0, 12), Color=typeof(rc.IconColor)=="Color3"and rc.IconColor or Z.Sub, ZIndex=7, Name="RowIcon"
+                }
+                )
+                if rIcon then rPad=17 end;
+            end;
+            if rLabel then
+                rLabel.Position=UDim2.new(0, rPad, 0, 0)
+                rLabel.Size=UDim2.new(0.52, -rPad, 1, 0)
+            end;
+        end;
+        rSetIcon(rc.Icon)
+        rLabel=_:Label(rRow, {
+            Font=Enum.Font.Gotham, Text=rName, TextColor3=Z.Sub, TextSize=11, TextTruncate=Enum.TextTruncate.AtEnd, Position=UDim2.new(0, rPad, 0, 0), Size=UDim2.new(0.52, -rPad, 1, 0), ZIndex=7, Name="RowLabel"
+        }
+        )
+        rVal=_:Label(rRow, {
+            Font=Enum.Font.GothamBold, Text=tostring(rValue), TextColor3=typeof(rc.Color)=="Color3"and rc.Color or Z.Text, TextSize=11, TextXAlignment=Enum.TextXAlignment.Right, TextTruncate=Enum.TextTruncate.AtEnd, Position=UDim2.new(0.52, 0, 0, 0), Size=UDim2.new(0.48, 0, 1, 0), ZIndex=7, Name="RowValue"
+        }
+        )
+        local rApi
+        rApi= {
+            Kind="item", Name=rName, Frame=rRow, Label=rLabel, Value=rVal,
+            Get=function()return rVal.Text end,
+            Set=function(v, col)rVal.Text=tostring(v)if typeof(col)=="Color3"then rVal.TextColor3=col end;
+            return rApi end,
+            SetLabel=function(cU)rLabel.Text=tostring(cU)return rApi end,
+            SetColor=function(col)if typeof(col)=="Color3"then rVal.TextColor3=col end;
+            return rApi end,
+            SetLabelColor=function(col)if typeof(col)=="Color3"then rLabel.TextColor3=col end;
+            return rApi end,
+            SetIcon=function(nm)rSetIcon(nm)return rApi end,
+            SetVisible=function(v)rRow.Visible=v~=false;
+            return rApi end,
+            Remove=function()if stItems[rName]==rApi then stItems[rName]=nil end;
+            if rRow then rRow:Destroy()end end
+        }
+        rApi.Destroy=rApi.Remove;
+        stItems[rName]=rApi;
+        return rApi end;
+
+    -- ---------- row: divider ----------
+    local function stAddDivider(txt)
+        if stDead then return nil end;
+        local hasText=txt~=nil and txt~=false and tostring(txt)~=""
+        local dHold=_:Create("Frame", {
+            Name="StatusDivider", BackgroundTransparency=1, BorderSizePixel=0, LayoutOrder=stNextOrder(), Size=UDim2.new(1, 0, 0, hasText and 17 or 9), ZIndex=6
+        }
+        , stBody)
+        if hasText then
+            _:Label(dHold, {
+                Font=Enum.Font.GothamBold, Text=string.upper(tostring(txt)), TextColor3=Z.Sub, TextSize=9, TextTruncate=Enum.TextTruncate.AtEnd, Position=UDim2.new(0, 0, 0, 0), Size=UDim2.new(1, 0, 1, 0), ZIndex=7, Name="DividerText"
+            }
+            )
+        else
+            local dLine=_:Create("Frame", {
+                Name="DividerLine", BackgroundColor3=Z.Off, BorderSizePixel=0, AnchorPoint=Vector2.new(0, 0.5), Position=UDim2.new(0, 0, 0.5, 0), Size=UDim2.new(1, 0, 0, 1), ZIndex=7
+            }
+            , dHold)
+            _:Round(dLine)
+        end;
+        return {
+            Kind="divider", Frame=dHold,
+            SetText=function(cU)local lbl=dHold:FindFirstChild("DividerText")if lbl then lbl.Text=string.upper(tostring(cU))end end,
+            SetVisible=function(v)dHold.Visible=v~=false end,
+            Remove=function()if dHold then dHold:Destroy()end end,
+            Destroy=function()if dHold then dHold:Destroy()end end
+        }
+    end;
+
+    -- ---------- row: bar ----------
+    local function stAddBar(bc)
+        if stDead then return nil end;
+        if type(bc)=="string"then bc= {bc}end;
+        if type(bc)~="table"then bc= {}end;
+        local bName=tostring(bc[1]or bc.Name or bc.Label or"Bar")
+        local bMax=tonumber(bc[3]or bc.Max)or 100;  if bMax<=0 then bMax=100 end;
+        local bCur=tonumber(bc[2]or bc.Default or bc.Value)or 0;
+        local bSuffix=bc.Suffix;
+        local bHold=_:Create("Frame", {
+            Name="StatusBar", BackgroundTransparency=1, BorderSizePixel=0, LayoutOrder=stNextOrder(), Size=UDim2.new(1, 0, 0, stRowH+11), ZIndex=6
+        }
+        , stBody)
+        local bLabel=_:Label(bHold, {
+            Font=Enum.Font.Gotham, Text=bName, TextColor3=Z.Sub, TextSize=11, TextTruncate=Enum.TextTruncate.AtEnd, Position=UDim2.new(0, 0, 0, 0), Size=UDim2.new(0.6, 0, 0, stRowH), ZIndex=7, Name="BarLabel"
+        }
+        )
+        local bVal=_:Label(bHold, {
+            Font=Enum.Font.GothamBold, Text="0%", TextColor3=Z.Text, TextSize=11, TextXAlignment=Enum.TextXAlignment.Right, Position=UDim2.new(0.6, 0, 0, 0), Size=UDim2.new(0.4, 0, 0, stRowH), ZIndex=7, Name="BarValue"
+        }
+        )
+        local bTrack=_:Create("Frame", {
+            Name="BarTrack", BackgroundColor3=Z.Off, BorderSizePixel=0, ClipsDescendants=true, AnchorPoint=Vector2.new(0, 1), Position=UDim2.new(0, 0, 1, 0), Size=UDim2.new(1, 0, 0, 5), ZIndex=7
+        }
+        , bHold)
+        _:Round(bTrack)
+        local bFill=_:Create("Frame", {
+            Name="BarFill", BackgroundColor3=typeof(bc.Color)=="Color3"and bc.Color or stAccent, BorderSizePixel=0, Size=UDim2.new(0, 0, 1, 0), ZIndex=8
+        }
+        , bTrack)
+        _:Round(bFill)
+        local bApi
+        bApi= {
+            Kind="bar", Name=bName, Frame=bHold, Fill=bFill,
+            Get=function()return bCur end,
+            GetPercent=function()return bCur/bMax end,
+            Set=function(v, anim)
+                bCur=math.clamp(tonumber(v)or 0, 0, bMax)
+                local pct=bCur/bMax;
+                bVal.Text=bSuffix and(tostring(math.floor(bCur+0.5))..tostring(bSuffix))or(tostring(math.floor(pct*100+0.5)).."%")
+                if anim==false then bFill.Size=UDim2.new(pct, 0, 1, 0)else _:Tween(bFill, 0.2, {
+                    Size=UDim2.new(pct, 0, 1, 0)
+                }
+                )end;
+                return bApi end,
+            SetMax=function(m)bMax=tonumber(m)or bMax;
+            if bMax<=0 then bMax=100 end;
+            bApi.Set(bCur)return bApi end,
+            SetLabel=function(cU)bLabel.Text=tostring(cU)return bApi end,
+            SetColor=function(col)if typeof(col)=="Color3"then bFill.BackgroundColor3=col end;
+            return bApi end,
+            SetVisible=function(v)bHold.Visible=v~=false;
+            return bApi end,
+            Remove=function()if stItems[bName]==bApi then stItems[bName]=nil end;
+            if bHold then bHold:Destroy()end end
+        }
+        bApi.Destroy=bApi.Remove;
+        bApi.Set(bCur, false)
+        stItems[bName]=bApi;
+        return bApi end;
+
+    local function stClear()
+        for ci, child in ipairs(stBody:GetChildren())do
+            if not child:IsA("UIListLayout")and not child:IsA("UIPadding")then child:Destroy()end
+        end;
+        stItems= {}
+        stOrder=0 end;
+
+    -- ---------- live rows ----------
+    local stLive= {}
+    local stStart=os.clock()
+    local stFrames, stElapsed, stFps=0, 0, 0;
+    local stWantFps=cfg.FPS==true or cfg.Fps==true;
+    local stWantPing=cfg.Ping==true;
+    local stWantTime=cfg.Time==true or cfg.Uptime==true;
+    local stWantMem=cfg.Memory==true or cfg.Ram==true;
+    local stWantPlayers=cfg.Players==true;
+    if stWantFps or stWantPing or stWantTime or stWantMem or stWantPlayers then
+        if cfg.SystemDivider~=false then stAddDivider(cfg.SystemTitle or"System")end;
+        if stWantFps then stLive.fps=stAddItem( {"FPS", "--", Icon="activity"} )end;
+        if stWantPing then stLive.ping=stAddItem( {"Ping", "--", Icon="wifi"} )end;
+        if stWantMem then stLive.memory=stAddItem( {"Memory", "--", Icon="database"} )end;
+        if stWantPlayers then stLive.players=stAddItem( {"Players", "--", Icon="users"} )end;
+        if stWantTime then stLive.time=stAddItem( {"Uptime", "00:00", Icon="clock"} )end;
+        local stAcc=0;
+        stTrack(b.RenderStepped:Connect(function(dt)
+            if stDead then return end;
+            dt=tonumber(dt)or 0;
+            stFrames=stFrames+1;
+            stElapsed=stElapsed+dt;
+            if stElapsed>=0.5 then stFps=math.floor(stFrames/stElapsed+0.5)stFrames=0;
+            stElapsed=0 end;
+            stAcc=stAcc+dt;
+            if stAcc<stRate then return end;
+            stAcc=0;
+            if not stPanel.Visible then return end;
+            if stLive.fps then stLive.fps.Set(stFps)end;
+            if stLive.ping then local pg=vlhReadPing()stLive.ping.Set(pg and(tostring(pg).." ms")or"--")end;
+            if stLive.memory then local mb=vlhReadMemory()stLive.memory.Set(mb and string.format("%.1f MB", mb)or"--")end;
+            if stLive.players then local pc=vlhPlayerCount()stLive.players.Set(pc and tostring(pc)or"--")end;
+            if stLive.time then stLive.time.Set(vlhFmtClock(os.clock()-stStart))end
+        end))
+    end;
+
+    -- ---------- collapse ----------
+    local stCollapsed=false;
+    local function stSetCollapsed(v, anim)
+        stCollapsed=v==true;
+        stBody.Visible=not stCollapsed;
+        if stArrow then
+            if anim then _:Tween(stArrow, 0.18, {
+                Rotation=stCollapsed and 0 or 180
+            }
+            )else stArrow.Rotation=stCollapsed and 0 or 180 end
+        end
+    end;
+
+    -- ---------- drag ----------
+    local stDragging=false;
+    local stDragFrom=nil;
+    local stDragBase=nil;
+    local stMoved=false;
+    stTrack(stHeader.InputBegan:Connect(function(P)
+        if stDead then return end;
+        if P.UserInputType==Enum.UserInputType.MouseButton1 or P.UserInputType==Enum.UserInputType.Touch then
+            stMoved=false;
+            if not stDrag then return end;
+            stDragging=true;
+            stDragFrom=P.Position;
+            stDragBase=stPanel.Position
+        end
+    end))
+    stTrack(d.InputChanged:Connect(function(P)
+        if stDead or not stDragging or not stDrag then return end;
+        if P.UserInputType~=Enum.UserInputType.MouseMovement and P.UserInputType~=Enum.UserInputType.Touch then return end;
+        local dx=P.Position.X-stDragFrom.X;
+        local dy=P.Position.Y-stDragFrom.Y;
+        if math.abs(dx)>3 or math.abs(dy)>3 then stMoved=true end;
+        stPanel.Position=UDim2.new(stDragBase.X.Scale, stDragBase.X.Offset+dx, stDragBase.Y.Scale, stDragBase.Y.Offset+dy)
+    end))
+    stTrack(d.InputEnded:Connect(function(P)
+        if P.UserInputType==Enum.UserInputType.MouseButton1 or P.UserInputType==Enum.UserInputType.Touch then stDragging=false end
+    end))
+    if stClickCollapse then
+        stTrack(stHeader.Activated:Connect(function()
+            if stDead or stMoved then return end;
+            stSetCollapsed(not stCollapsed, true)
+        end))
+    end;
+    if stCloseBtn then
+        stTrack(stCloseBtn.Activated:Connect(function()ar(stCloseBtn)api:Hide()
+        if type(cfg.OnClose)=="function"then task.spawn(cfg.OnClose)end end))
+    end;
+
+    -- ---------- keybind ----------
+    local stKey=cfg.Keybind or cfg.Key;
+    if typeof(stKey)=="EnumItem"then
+        stTrack(d.InputBegan:Connect(function(P, gpe)
+            if stDead or gpe then return end;
+            if P.KeyCode==stKey then api:Toggle()end
+        end))
+    end;
+
+    -- ---------- public API ----------
+    api.Frame=stPanel;
+    api.Panel=stPanel;
+    api.Gui=stGui;
+    api.Header=stHeader;
+    api.Body=stBody;
+    api.Title=stTitleLabel;
+
+    function api:AddItem(c)return stAddItem(c)end;
+    function api:AddLabel(c)return stAddItem(c)end;
+    function api:AddDivider(cU)return stAddDivider(cU)end;
+    function api:AddSection(cU)return stAddDivider(cU or"Section")end;
+    function api:AddBar(c)return stAddBar(c)end;
+    function api:AddProgress(c)return stAddBar(c)end;
+    function api:SetItem(nm, v, c)
+        local it=stItems[tostring(nm)]
+        if it then it.Set(v)return it end;
+        local merged=type(c)=="table"and c or {}
+        merged[1]=nm;
+        merged[2]=v;
+        return stAddItem(merged)end;
+    function api:GetItem(nm)return stItems[tostring(nm)]end;
+    function api:Get(nm)local it=stItems[tostring(nm)]return it and it.Get()or nil end;
+    function api:Set(nm, v)return api:SetItem(nm, v)end;
+    function api:Remove(nm)local it=stItems[tostring(nm)]if it then it.Remove()return true end;
+    return false end;
+    function api:Clear()stClear()end;
+    function api:GetItems()local out= {}for k, v in pairs(stItems)do out[k]=v end;
+    return out end;
+
+    function api:SetTitle(cU)stTitle=tostring(cU)stTitleLabel.Text=stTitle end;
+    function api:GetTitle()return stTitle end;
+    function api:SetIcon(nm)stSetIcon(nm)end;
+    function api:SetAccent(col)if typeof(col)=="Color3"then stAccent=col;
+    if stIcon and stIcon.SetColor then pcall(function()stIcon.SetColor(col)end)end end end;
+    function api:SetWidth(w)stWidth=math.clamp(tonumber(w)or stWidth, 140, 460)stPanel.Size=UDim2.new(0, stWidth, 0, 0)end;
+    function api:GetWidth()return stWidth end;
+    function api:SetTransparency(c3)stPanel.BackgroundTransparency=math.clamp(tonumber(c3)or 0, 0, 1)end;
+    function api:SetStrokeTransparency(c3)if stStroke then stStroke.Transparency=math.clamp(tonumber(c3)or 0, 0, 1)end end;
+    function api:SetPosition(p)if typeof(p)=="UDim2"then stPanel.Position=p end end;
+    function api:GetPosition()return stPanel.Position end;
+    function api:SetDraggable(v)stDrag=v==true;
+    if not stDrag then stDragging=false end end;
+    function api:IsDraggable()return stDrag end;
+
+    function api:SetVisible(v)stPanel.Visible=v~=false end;
+    function api:Show()stPanel.Visible=true end;
+    function api:Hide()stPanel.Visible=false end;
+    function api:Toggle()stPanel.Visible=not stPanel.Visible;
+    return stPanel.Visible end;
+    function api:IsVisible()return stPanel.Visible==true end;
+
+    function api:Collapse()stSetCollapsed(true, true)end;
+    function api:Expand()stSetCollapsed(false, true)end;
+    function api:SetCollapsed(v)stSetCollapsed(v==true, true)end;
+    function api:ToggleCollapsed()stSetCollapsed(not stCollapsed, true)return stCollapsed end;
+    function api:IsCollapsed()return stCollapsed end;
+
+    function api:GetFPS()return stFps end;
+    function api:GetPing()return vlhReadPing()end;
+    function api:GetUptime()return os.clock()-stStart end;
+    function api:ResetUptime()stStart=os.clock()end;
+
+    -- ---------- state / config persistence ----------
+    function api.GetState()
+        return {
+            xs=stPanel.Position.X.Scale, xo=stPanel.Position.X.Offset, ys=stPanel.Position.Y.Scale, yo=stPanel.Position.Y.Offset, w=stWidth, v=stPanel.Visible and 1 or 0, c=stCollapsed and 1 or 0
+        }
+    end;
+    function api.LoadState(t)
+        if type(t)~="table"then return false end;
+        if tonumber(t.xo)and tonumber(t.yo)then stPanel.Position=UDim2.new(tonumber(t.xs)or 0, tonumber(t.xo), tonumber(t.ys)or 0, tonumber(t.yo))end;
+        if tonumber(t.w)then api:SetWidth(tonumber(t.w))end;
+        if t.v~=nil then stPanel.Visible=(tonumber(t.v)or 1)>=1 end;
+        if t.c~=nil then stSetCollapsed((tonumber(t.c)or 0)>=1, false)end;
+        return true end;
+    api.SetState=api.LoadState;
+    local stFlag=cfg.Flag or cfg.flag;
+    if stFlag~=nil and tostring(stFlag)~=""then
+        api.Flag=tostring(stFlag)
+        eq.Elements[api.Flag]= {
+            Owner=api, Get=api.GetState, Set=api.LoadState, Encode=function(v)return v end, Decode=function(l)return type(l)=="table"and l or nil end
+        }
+    end;
+
+    function api:Destroy()
+        if stDead then return end;
+        stDead=true;
+        if api.Flag and eq.Elements[api.Flag]and eq.Elements[api.Flag].Owner==api then eq.Elements[api.Flag]=nil end;
+        for ci, cn in ipairs(stConns)do pcall(function()cn:Disconnect()end)end;
+        stConns= {}
+        stItems= {}
+        for ci=#vlhStatusAll, 1, -1 do if vlhStatusAll[ci]==api then table.remove(vlhStatusAll, ci)end end;
+        if stPanel then stPanel:Destroy()end end;
+    api.Unload=api.Destroy;
+
+    if cfg.Collapsed==true then stSetCollapsed(true, false)end;
+
+    if type(cfg.Items)=="table"then
+        for ii, entry in ipairs(cfg.Items)do
+            if type(entry)=="table"and(entry.Type=="divider"or entry.Divider)then stAddDivider(entry[1]or entry.Text or entry.Name)
+            elseif type(entry)=="table"and(entry.Type=="bar"or entry.Bar)then stAddBar(entry)
+            else stAddItem(entry)end
+        end
+    end;
+
+    vlhStatusAll[#vlhStatusAll+1]=api;
+    return api end;
+
+eq.CreateFloatingStatus=eq.CreateStatus;
+eq.AddStatus=eq.CreateStatus;
+eq.VLHStatus=eq.CreateStatus;
+function eq:GetStatusPanels()local out= {}for I, v in ipairs(vlhStatusAll)do out[#out+1]=v end;
+return out end;
+function eq:SetStatusVisible(v)for I, p in ipairs(vlhStatusAll)do pcall(function()p:SetVisible(v)end)end end;
+function eq:ToggleStatus()for I, p in ipairs(vlhStatusAll)do pcall(function()p:Toggle()end)end end;
+function eq:DestroyStatus()for I=#vlhStatusAll, 1, -1 do local p=vlhStatusAll[I]pcall(function()p:Destroy()end)end;
+vlhStatusAll= {}
+if vlhStatusGui then pcall(function()vlhStatusGui:Destroy()end)vlhStatusGui=nil end end;
+
+function eq:CreateWindow(ew)local fF=ew[1]or ew.Title or"Veloria Hub"local fG=ew[2]or ew.Description or""local fH=ew[3]or ew["Tab Width"]or 144;
 local fI=ew[4]or ew.SizeUi or UDim2.fromOffset(760, 500)local fJ=ew[5]or ew.Keybind or Enum.KeyCode.RightControl;
 local VLH_LOGO="rbxassetid://117785011367332"
 local VLH_FLOAT_ICON="rbxassetid://87349158369586"
@@ -3648,6 +4159,10 @@ k4.Open( {
 }
 
 )end;
+function fL:CreateStatus(cfg)local st=eq:CreateStatus(cfg)if st then fR( {Disconnect=function()pcall(function()st:Destroy()end)end} )end;return st end;
+fL.AddStatus=fL.CreateStatus;
+fL.CreateFloatingStatus=fL.CreateStatus;
+fL.VLHStatus=fL.CreateStatus;
 function fL:SetIcon(g8)ge(g8)end;
 function fL:SetBackground(g8, ed)return g7(g8, ed)end;
 function fL:ClearBackground()g7(nil)end;
@@ -3917,6 +4432,348 @@ table.insert(iL, function()if kf and not kg then _:Tween(km, 0.2, {
 if k8.Toggle~=nil then k4:BindToggle(k8.Toggle)end;
 if k8.Open==true then kH(true)end;
 return k4 end;
+-- ============================================================
+-- Floating Window (VLH)
+-- Window kecil berdiri sendiri di ScreenGui `VLHFloat`. Isinya
+-- section + elemen lengkap (lewat detached tab), jadi bisa dipakai
+-- bikin fitur tanpa nempel ke window utama.
+-- ============================================================
+local flGui=nil;
+local flAll= {}
+local flZ=2;
+local function flLayer()if flGui and flGui.Parent then return flGui end;
+flGui=_:Create("ScreenGui", {
+    Name="VLHFloat", ZIndexBehavior=Enum.ZIndexBehavior.Sibling, ResetOnSpawn=false, IgnoreGuiInset=true, DisplayOrder=97
+}
+, _:GetGuiParent())return flGui end;
+
+function fL:CreateFloat(cfg)
+    if fP then return nil end;
+    if type(cfg)=="string"then cfg= {cfg}end;
+    if type(cfg)~="table"then cfg= {}end;
+
+    local flTitle=tostring(cfg[1]or cfg.Title or cfg.Name or"Float")
+    local flMinW=math.clamp(tonumber(cfg.MinWidth)or 200, 140, 1200)
+    local flMinH=math.clamp(tonumber(cfg.MinHeight)or 120, 80, 1200)
+    local flMaxW=math.clamp(tonumber(cfg.MaxWidth)or 900, flMinW, 2000)
+    local flMaxH=math.clamp(tonumber(cfg.MaxHeight)or 700, flMinH, 2000)
+    local flW=math.clamp(tonumber(cfg.Width)or 300, flMinW, flMaxW)
+    local flH=math.clamp(tonumber(cfg.Height)or 280, flMinH, flMaxH)
+    local flDrag=cfg.Draggable~=false;
+    local flResize=cfg.Resizable~=false;
+    local flClosable=cfg.Closable~=false;
+    local flMinimizable=cfg.Minimizable~=false;
+
+    local flConns= {}
+    local function flTrack(cn)if cn then flConns[#flConns+1]=cn end;
+    return cn end;
+    local api= {}
+    local flDead=false;
+
+    -- ---------- shell ----------
+    flZ=flZ+1;
+    local flRoot=_:Create("Frame", {
+        Name="VLHFloatWindow", BackgroundColor3=Color3.fromRGB(13, 13, 13), BackgroundTransparency=math.clamp(tonumber(cfg.Transparency)or 0.02, 0, 1), BorderSizePixel=0, ClipsDescendants=true, Active=true, Position=typeof(cfg.Position)=="UDim2"and cfg.Position or UDim2.new(0.5, -math.floor(flW/2), 0.5, -math.floor(flH/2)), Size=UDim2.new(0, flW, 0, flH), Visible=cfg.Visible~=false, ZIndex=flZ
+    }
+    , flLayer())
+    _:Corner(flRoot, 12)
+    local flStroke=_:Stroke(flRoot, Z.White, 0.25, 1.5)
+
+    local flHeader=_:Create("TextButton", {
+        Name="FloatHeader", Text="", AutoButtonColor=false, Active=true, BackgroundTransparency=1, BorderSizePixel=0, Size=UDim2.new(1, 0, 0, 34), ZIndex=flZ+1
+    }
+    , flRoot)
+    local flIcon=nil;
+    local flTitleLabel=_:Label(flHeader, {
+        Text=flTitle, TextColor3=Z.White, TextSize=12, TextTruncate=Enum.TextTruncate.AtEnd, Position=UDim2.new(0, 12, 0, 0), Size=UDim2.new(1, -78, 1, 0), ZIndex=flZ+2, Name="FloatTitle"
+    }
+    )
+    local function flHeadLayout()
+        local lx=flIcon and 32 or 12;
+        local rx=8;
+        if flClosable then rx=rx+26 end;
+        if flMinimizable then rx=rx+26 end;
+        flTitleLabel.Position=UDim2.new(0, lx, 0, 0)
+        flTitleLabel.Size=UDim2.new(1, -(lx+rx), 1, 0)
+    end;
+    local function flSetIcon(g8)
+        if flIcon then pcall(function()flIcon.Destroy()end)flIcon=nil end;
+        if g8~=nil and g8~=false and g8~=""then
+            flIcon=_:MakeIcon(flHeader, g8, {
+                AnchorPoint=Vector2.new(0, 0.5), Position=UDim2.new(0, 10, 0.5, 0), Size=UDim2.new(0, 16, 0, 16), Color=Z.White, ZIndex=flZ+2, Name="FloatIcon"
+            }
+            )
+        end;
+        flHeadLayout()
+    end;
+    flSetIcon(cfg.Icon)
+
+    local flCloseBtn=nil;
+    if flClosable then
+        flCloseBtn=_:Create("TextButton", {
+            Name="FloatClose", Text="", AutoButtonColor=false, AnchorPoint=Vector2.new(1, 0.5), BackgroundColor3=Z.Red, BorderSizePixel=0, ClipsDescendants=true, Position=UDim2.new(1, -8, 0.5, 0), Size=UDim2.new(0, 22, 0, 22), ZIndex=flZ+2
+        }
+        , flHeader)
+        _:Corner(flCloseBtn, 6)
+        for I, b5 in ipairs( {45, -45} )do
+            local xb=_:Create("Frame", {
+                Name="XBar", AnchorPoint=Vector2.new(0.5, 0.5), BackgroundColor3=Z.White, BorderSizePixel=0, Position=UDim2.new(0.5, 0, 0.5, 0), Rotation=b5, Size=UDim2.new(0, 11, 0, 2), ZIndex=flZ+3
+            }
+            , flCloseBtn)
+            _:Round(xb)
+        end
+    end;
+    local flMinBtn=nil;
+    if flMinimizable then
+        flMinBtn=_:Create("TextButton", {
+            Name="FloatMinimize", Text="", AutoButtonColor=false, AnchorPoint=Vector2.new(1, 0.5), BackgroundColor3=Z.White, BackgroundTransparency=0.9, BorderSizePixel=0, ClipsDescendants=true, Position=UDim2.new(1, flClosable and -34 or -8, 0.5, 0), Size=UDim2.new(0, 22, 0, 22), ZIndex=flZ+2
+        }
+        , flHeader)
+        _:Corner(flMinBtn, 6)
+        _:Create("Frame", {
+            Name="MinBar", AnchorPoint=Vector2.new(0.5, 0.5), BackgroundColor3=Z.White, BorderSizePixel=0, Position=UDim2.new(0.5, 0, 0.5, 0), Size=UDim2.new(0, 11, 0, 2), ZIndex=flZ+3
+        }
+        , flMinBtn)
+    end;
+
+    _:Create("Frame", {
+        Name="FloatDivider", BackgroundColor3=Z.White, BackgroundTransparency=0.9, BorderSizePixel=0, Position=UDim2.new(0, 10, 0, 34), Size=UDim2.new(1, -20, 0, 1), ZIndex=flZ+1
+    }
+    , flRoot)
+
+    local flBody=_:Create("Frame", {
+        Name="FloatBody", BackgroundTransparency=1, BorderSizePixel=0, Position=UDim2.new(0, 6, 0, 38), Size=UDim2.new(1, -12, 1, -44), ZIndex=flZ+1
+    }
+    , flRoot)
+    local flHolder=_:Create("Frame", {
+        Name="FloatTabHolder", BackgroundTransparency=1, BorderSizePixel=0, Visible=false, Size=UDim2.new(0, 0, 0, 0), ZIndex=flZ+1
+    }
+    , flRoot)
+
+    -- detached tab = section + semua elemen, tanpa nongol di sidebar
+    local flTab=fL:AddTab( {
+        flTitle, "", __Detached= {
+            Body=flBody, Holder=flHolder
+        }
+    }
+    )
+
+    -- ---------- resize grip ----------
+    local flGrip=nil;
+    if flResize then
+        flGrip=_:Create("TextButton", {
+            Name="FloatResize", Text="", AutoButtonColor=false, Active=true, AnchorPoint=Vector2.new(1, 1), BackgroundTransparency=1, BorderSizePixel=0, Position=UDim2.new(1, -2, 1, -2), Size=UDim2.new(0, 16, 0, 16), ZIndex=flZ+4
+        }
+        , flRoot)
+        for I, off in ipairs( {0, 4, 8} )do
+            local gb=_:Create("Frame", {
+                Name="GripBar", AnchorPoint=Vector2.new(1, 1), BackgroundColor3=Z.Sub, BackgroundTransparency=0.4, BorderSizePixel=0, Position=UDim2.new(1, -2, 1, -2-off), Rotation=-45, Size=UDim2.new(0, 10-off, 0, 2), ZIndex=flZ+5
+            }
+            , flGrip)
+            _:Round(gb)
+        end
+    end;
+
+    -- ---------- bring to front ----------
+    local function flFront()
+        if flDead then return end;
+        flZ=flZ+1;
+        flRoot.ZIndex=flZ;
+        flHeader.ZIndex=flZ+1;
+        flBody.ZIndex=flZ+1;
+        if flGrip then flGrip.ZIndex=flZ+4 end
+    end;
+
+    -- ---------- drag ----------
+    local flDragging, flFrom, flBase, flMoved=false, nil, nil, false;
+    flTrack(flHeader.InputBegan:Connect(function(P)
+        if flDead then return end;
+        if P.UserInputType==Enum.UserInputType.MouseButton1 or P.UserInputType==Enum.UserInputType.Touch then
+            flFront()
+            flMoved=false;
+            if not flDrag then return end;
+            flDragging=true;
+            flFrom=P.Position;
+            flBase=flRoot.Position
+        end
+    end))
+    -- ---------- resize ----------
+    local flSizing, flSFrom, flSBase=false, nil, nil;
+    if flGrip then
+        flTrack(flGrip.InputBegan:Connect(function(P)
+            if flDead or not flResize then return end;
+            if P.UserInputType==Enum.UserInputType.MouseButton1 or P.UserInputType==Enum.UserInputType.Touch then
+                flFront()
+                flSizing=true;
+                flSFrom=P.Position;
+                flSBase=flRoot.Size
+            end
+        end))
+    end;
+    flTrack(d.InputChanged:Connect(function(P)
+        if flDead then return end;
+        if P.UserInputType~=Enum.UserInputType.MouseMovement and P.UserInputType~=Enum.UserInputType.Touch then return end;
+        if flDragging and flDrag then
+            local dx=P.Position.X-flFrom.X;
+            local dy=P.Position.Y-flFrom.Y;
+            if math.abs(dx)>3 or math.abs(dy)>3 then flMoved=true end;
+            flRoot.Position=UDim2.new(flBase.X.Scale, flBase.X.Offset+dx, flBase.Y.Scale, flBase.Y.Offset+dy)
+        elseif flSizing and flResize then
+            local dx=P.Position.X-flSFrom.X;
+            local dy=P.Position.Y-flSFrom.Y;
+            flW=math.clamp(flSBase.X.Offset+dx, flMinW, flMaxW)
+            flH=math.clamp(flSBase.Y.Offset+dy, flMinH, flMaxH)
+            flRoot.Size=UDim2.new(0, flW, 0, flH)
+        end
+    end))
+    flTrack(d.InputEnded:Connect(function(P)
+        if P.UserInputType==Enum.UserInputType.MouseButton1 or P.UserInputType==Enum.UserInputType.Touch then
+            flDragging=false;
+            flSizing=false
+        end
+    end))
+
+    -- ---------- minimize ----------
+    local flMin=false;
+    local function flSetMin(v, anim)
+        flMin=v==true;
+        flBody.Visible=not flMin;
+        if flGrip then flGrip.Visible=not flMin end;
+        local goal=flMin and UDim2.new(0, flW, 0, 34)or UDim2.new(0, flW, 0, flH)
+        if anim then _:Tween(flRoot, 0.18, {
+            Size=goal
+        }
+        )else flRoot.Size=goal end
+    end;
+    if flMinBtn then
+        flTrack(flMinBtn.Activated:Connect(function()ar(flMinBtn)flSetMin(not flMin, true)end))
+    end;
+    if flCloseBtn then
+        flTrack(flCloseBtn.Activated:Connect(function()ar(flCloseBtn)api:Hide()
+        if type(cfg.OnClose)=="function"then task.spawn(cfg.OnClose, api)end end))
+    end;
+
+    -- ---------- keybind ----------
+    local flKey=cfg.Keybind or cfg.Key;
+    if typeof(flKey)=="EnumItem"then
+        flTrack(d.InputBegan:Connect(function(P, gpe)
+            if flDead or gpe then return end;
+            if P.KeyCode==flKey then api:Toggle()end
+        end))
+    end;
+
+    -- ---------- element proxy ----------
+    local flSec=nil;
+    local function flDefault()
+        if not flSec then flSec=flTab:AddSection( {
+            cfg.SectionName or"Items", Flat=true
+        }
+        )end;
+        return flSec end;
+    for I, a0 in ipairs(k7)do
+        api[a0]=function(I2, ...)local aP=flDefault()return aP[a0](aP, ...)end
+    end;
+    api.AddPriority=function(I2, ...)local aP=flDefault()return aP:AddPriority(...)end;
+    api.AddMultiDropdown=function(I2, ...)local aP=flDefault()return aP:AddMultiDropdown(...)end;
+    api.AddSearchDropdown=function(I2, ...)local aP=flDefault()return aP:AddSearchDropdown(...)end;
+    api.AddDoubleDropdown=function(I2, ...)local aP=flDefault()return aP:AddDoubleDropdown(...)end;
+    api.AddMedia=function(I2, ...)local aP=flDefault()return aP:AddMedia(...)end;
+    function api:AddSection(kA)flSec=nil;
+    return flTab:AddSection(kA)end;
+    function api:AddCustom(c6, a1)
+        local kB=c6;
+        if type(c6)=="string"then local aX, kC=pcall(Instance.new, c6)kB=aX and kC or nil end;
+        if typeof(kB)~="Instance"or not kB:IsA("GuiObject")then return nil end;
+        if type(a1)=="table"then for aZ, a_ in pairs(a1)do pcall(function()kB[aZ]=a_ end)end end;
+        kB.LayoutOrder=#flTab.Frame:GetChildren()+1;
+        kB.Parent=flTab.Frame;
+        flSec=nil;
+        return kB end;
+    function api:Clear()
+        for ci, child in ipairs(flTab.Frame:GetChildren())do
+            if not child:IsA("UIListLayout")and not child:IsA("UIPadding")then child:Destroy()end
+        end;
+        flSec=nil end;
+
+    -- ---------- public API ----------
+    api.Frame=flRoot;
+    api.Window=flRoot;
+    api.Header=flHeader;
+    api.Body=flBody;
+    api.Content=flTab.Frame;
+    api.Tab=flTab;
+    api.Gui=flRoot.Parent;
+
+    function api:SetTitle(cU)flTitle=tostring(cU)flTitleLabel.Text=flTitle end;
+    function api:GetTitle()return flTitle end;
+    function api:SetIcon(g8)flSetIcon(g8)end;
+    function api:SetTransparency(c3)flRoot.BackgroundTransparency=math.clamp(tonumber(c3)or 0, 0, 1)end;
+
+    function api:SetSize(w, h)
+        flW=math.clamp(tonumber(w)or flW, flMinW, flMaxW)
+        flH=math.clamp(tonumber(h)or flH, flMinH, flMaxH)
+        if not flMin then flRoot.Size=UDim2.new(0, flW, 0, flH)else flRoot.Size=UDim2.new(0, flW, 0, 34)end end;
+    function api:GetSize()return flW, flH end;
+    function api:SetMinSize(w, h)flMinW=tonumber(w)or flMinW;
+    flMinH=tonumber(h)or flMinH;
+    api:SetSize(flW, flH)end;
+    function api:SetMaxSize(w, h)flMaxW=tonumber(w)or flMaxW;
+    flMaxH=tonumber(h)or flMaxH;
+    api:SetSize(flW, flH)end;
+    function api:SetPosition(p)if typeof(p)=="UDim2"then flRoot.Position=p end end;
+    function api:GetPosition()return flRoot.Position end;
+    function api:Center()flRoot.Position=UDim2.new(0.5, -math.floor(flW/2), 0.5, -math.floor(flH/2))end;
+    function api:SetDraggable(v)flDrag=v==true;
+    if not flDrag then flDragging=false end end;
+    function api:IsDraggable()return flDrag end;
+    function api:SetResizable(v)flResize=v==true;
+    if flGrip then flGrip.Visible=flResize and not flMin end;
+    if not flResize then flSizing=false end end;
+    function api:IsResizable()return flResize end;
+    function api:BringToFront()flFront()end;
+
+    function api:SetVisible(v)flRoot.Visible=v~=false;
+    if flRoot.Visible then flFront()
+    if type(cfg.OnOpen)=="function"then task.spawn(cfg.OnOpen, api)end end end;
+    function api:Show()api:SetVisible(true)end;
+    function api:Hide()flRoot.Visible=false end;
+    function api:Toggle()if flRoot.Visible then api:Hide()else api:Show()end;
+    return flRoot.Visible end;
+    function api:IsVisible()return flRoot.Visible==true end;
+
+    function api:Minimize()flSetMin(true, true)end;
+    function api:Restore()flSetMin(false, true)end;
+    function api:SetMinimized(v)flSetMin(v==true, true)end;
+    function api:ToggleMinimized()flSetMin(not flMin, true)return flMin end;
+    function api:IsMinimized()return flMin end;
+
+    function api:Destroy()
+        if flDead then return end;
+        flDead=true;
+        for ci, cn in ipairs(flConns)do pcall(function()cn:Disconnect()end)end;
+        flConns= {}
+        pcall(function()flTab:Destroy()end)
+        for ci=#flAll, 1, -1 do if flAll[ci]==api then table.remove(flAll, ci)end end;
+        if flRoot then flRoot:Destroy()end end;
+    api.Unload=api.Destroy;
+
+    if cfg.Minimized==true then flSetMin(true, false)end;
+    flAll[#flAll+1]=api;
+    fR( {
+        Disconnect=function()pcall(function()api:Destroy()end)end
+    }
+    )
+    return api end;
+fL.CreateFloatWindow=fL.CreateFloat;
+fL.AddFloat=fL.CreateFloat;
+fL.VLHFloat=fL.CreateFloat;
+function fL:GetFloats()local out= {}for I, v in ipairs(flAll)do out[#out+1]=v end;
+return out end;
+function fL:SetFloatsVisible(v)for I, p in ipairs(flAll)do pcall(function()p:SetVisible(v)end)end end;
+function fL:ToggleFloats()for I, p in ipairs(flAll)do pcall(function()p:Toggle()end)end end;
+function fL:DestroyFloats()for I=#flAll, 1, -1 do local p=flAll[I]pcall(function()p:Destroy()end)end;
+flAll= {}end;
+
 function fL:AddTab(ew, icon)ew=normalizeVLHTabConfig(ew, icon)local kO=ew[1]or ew.Name or ew.Title or"Tab"local kP=ew[2]or ew.Icon or""local kQ=type(ew.__Detached)=="table"and ew.__Detached or nil;
 local requestedGroup=ew.Group or ew.Category
 local kGroup=(type(requestedGroup)=="table" and requestedGroup.Holder and requestedGroup) or (type(requestedGroup)=="string" and tabGroups[requestedGroup]) or activeTabGroup
@@ -4010,8 +4867,124 @@ kY.Fill=kS;
 kY.Indicator=kT;
 kY.Label=kW;
 kY.IconImg=kU;
-kR.Activated:Connect(function()ar(kR)k_()end)kY.Select=k_;
+local kLocked=false;
+local kLockMsg=nil;
+local kLockIcon=nil;
+local kBadge=nil;
+local kBadgeLabel=nil;
+kR.Activated:Connect(function()if kLocked then if type(kLockMsg)=="function"then task.spawn(kLockMsg, kY)elseif kLockMsg~=nil and kLockMsg~=""then eq:Notify( {
+    Title=kO, Content=tostring(kLockMsg), Type="error"
+}
+)end;
+return end;
+ar(kR)k_()end)kY.Select=k_;
 if not kQ then table.insert(iI, kY)if#iI==1 then k_()end end;
+-- ---------- tab controls ----------
+local function kBadgeW()if not kBadge or not kBadge.Visible then return 0 end;
+return kBadge.Size.X.Offset+8 end;
+local function kLayout()
+    local lx=kV and 34 or 12;
+    local rx=4+kBadgeW()+(kLockIcon and 22 or 0)
+    kW.Position=UDim2.new(0, lx, 0, 0)
+    kW.Size=UDim2.new(1, -(lx+rx), 1, 0)
+    if kBadge then kBadge.Position=UDim2.new(1, -(8+(kLockIcon and 22 or 0)), 0.5, 0)end
+end;
+local function kFirstOpen(skip)
+    for I, tb in ipairs(iI)do
+        if tb~=skip and tb.Button and tb.Button.Visible and not(tb.IsLocked and tb:IsLocked())then return tb end
+    end;
+    return nil end;
+function kY:SetName(n)
+    kO=tostring(n)
+    kY.Name=kO;
+    kW.Text=kO;
+    pcall(function()kR.Name=kO .."TabBtn"kX.Name=kO .."Frame"end)
+    if iJ==kY then gM.Text=kO end;
+    return kY end;
+function kY:GetName()return kO end;
+function kY:SetIcon(g8)
+    if kU then pcall(function()kU.Destroy()end)kU=nil end;
+    if g8~=nil and g8~=false and g8~=""then
+        kU=_:MakeIcon(kR, g8, {
+            AnchorPoint=Vector2.new(0, 0.5), Position=UDim2.new(0, 10, 0.5, 0), Size=UDim2.new(0, 18, 0, 18), Color=(iJ==kY)and Z.Black or Z.Sub, Name="TabIcon"
+        }
+        )
+        if kU and kLocked and kU.SetTransparency then pcall(function()kU.SetTransparency(0.45)end)end
+    end;
+    kV=kU~=nil;
+    kY.IconImg=kU;
+    kLayout()
+    return kY end;
+function kY:GetIcon()return kP end;
+function kY:SetBadge(v, col)
+    if v==nil or v==false or v==""or v==0 then
+        if kBadge then pcall(function()kBadge:Destroy()end)kBadge=nil;
+        kBadgeLabel=nil end;
+        kLayout()
+        return kY end;
+    local txt=tostring(v)
+    if not kBadge then
+        kBadge=_:Create("Frame", {
+            Name="TabBadge", AnchorPoint=Vector2.new(1, 0.5), BackgroundColor3=Z.Red, BorderSizePixel=0, Position=UDim2.new(1, -8, 0.5, 0), Size=UDim2.new(0, 18, 0, 16), ZIndex=3
+        }
+        , kR)
+        _:Round(kBadge)
+        kBadgeLabel=_:Label(kBadge, {
+            Font=Enum.Font.GothamBold, Text=txt, TextColor3=Z.White, TextSize=10, TextXAlignment=Enum.TextXAlignment.Center, Size=UDim2.new(1, 0, 1, 0), ZIndex=4, Name="BadgeText"
+        }
+        )
+    end;
+    kBadgeLabel.Text=txt;
+    if typeof(col)=="Color3"then kBadge.BackgroundColor3=col end;
+    kBadge.Size=UDim2.new(0, math.max(18, #txt*7+10), 0, 16)
+    kBadge.Visible=true;
+    kLayout()
+    return kY end;
+function kY:GetBadge()return kBadgeLabel and kBadgeLabel.Text or nil end;
+function kY:ClearBadge()return kY:SetBadge(nil)end;
+function kY:SetLocked(v, msg)
+    kLocked=v==true;
+    kLockMsg=msg;
+    if kLocked then
+        if not kLockIcon then
+            kLockIcon=_:MakeIcon(kR, "lock", {
+                AnchorPoint=Vector2.new(1, 0.5), Position=UDim2.new(1, -10, 0.5, 0), Size=UDim2.new(0, 12, 0, 12), Color=Z.Sub, Name="TabLock"
+            }
+            )
+        end;
+        kW.TextTransparency=0.45;
+        if kU and kU.SetTransparency then pcall(function()kU.SetTransparency(0.45)end)end;
+        if iJ==kY then local nx=kFirstOpen(kY)if nx then nx.Select()end end
+    else
+        if kLockIcon then pcall(function()kLockIcon.Destroy()end)kLockIcon=nil end;
+        kW.TextTransparency=0;
+        if kU and kU.SetTransparency then pcall(function()kU.SetTransparency(0)end)end
+    end;
+    kLayout()
+    return kY end;
+function kY:IsLocked()return kLocked end;
+function kY:Lock(msg)return kY:SetLocked(true, msg)end;
+function kY:Unlock()return kY:SetLocked(false)end;
+function kY:SetVisible(v)
+    v=v~=false;
+    kR.Visible=v;
+    if not v then
+        if iJ==kY then
+            local nx=kFirstOpen(kY)
+            if nx then nx.Select()else kX.Visible=false end
+        else kX.Visible=false end
+    end;
+    return kY end;
+function kY:IsVisible()return kR.Visible==true end;
+function kY:Destroy()
+    for I=#iI, 1, -1 do if iI[I]==kY then table.remove(iI, I)end end;
+    if iJ==kY then
+        iJ=nil;
+        local nx=kFirstOpen(nil)
+        if nx then nx.Select()end
+    end;
+    pcall(function()kR:Destroy()end)
+    pcall(function()kX:Destroy()end)end;
 function kY:AddSection(kA)if type(kA)=="string"then kA= {
     kA
 }
