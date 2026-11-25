@@ -1,4 +1,3 @@
--- Konnn
 -- tertawa tapi terluka -_-
 -- Rexz Is Boss
 local a=game:GetService("Players")local b=game:GetService("RunService")local c=game:GetService("TweenService")local d=game:GetService("UserInputService")local e=game:GetService("VirtualUser")local f=game:GetService("HttpService")local g=game:GetService("TextService")local h=game:GetService("GuiService")local i=a.LocalPlayer;
@@ -2071,7 +2070,7 @@ local vlhStatusAll= {}
 
 local function vlhStatusLayer()if vlhStatusGui and vlhStatusGui.Parent then return vlhStatusGui end;
 vlhStatusGui=_:Create("ScreenGui", {
-    Name="VLHStatus", ZIndexBehavior=Enum.ZIndexBehavior.Sibling, ResetOnSpawn=false, IgnoreGuiInset=true, DisplayOrder=98
+    Name="VLHStatus", ZIndexBehavior=Enum.ZIndexBehavior.Sibling, ResetOnSpawn=false, IgnoreGuiInset=true, DisplayOrder=102
 }
 , _:GetGuiParent())return vlhStatusGui end;
 local function vlhFmtClock(cU)cU=math.max(math.floor(tonumber(cU)or 0), 0)local vh=math.floor(cU/3600)local vm=math.floor((cU%3600)/60)local vs=cU%60;
@@ -3030,7 +3029,7 @@ function footerApi:AddBadge(config)
         LayoutOrder=#gFooterItems:GetChildren()+1
     },gFooterItems)
     _:Corner(badge,6)
-    _:Stroke(badge,config.BorderColor or Z.White,0.86,1)
+    _:Stroke(badge,config.BorderColor or Z.White,tonumber(config.BorderTransparency) or 0.86,1)
     _:Create("UIPadding",{PaddingLeft=UDim.new(0,8),PaddingRight=UDim.new(0,8)},badge)
     return {Frame=badge,Set=function(_,value)if badge.Parent then badge.Text=tostring(value)end end,
         Destroy=function()if badge.Parent then badge:Destroy()end end}
@@ -3084,9 +3083,78 @@ function footerApi:SetBarHeight(height)
     height=math.clamp(tonumber(height) or 50,32,100)
     gV.Size=UDim2.new(1,0,0,height)
 end
--- Public footer configuration is intentionally a single string: VLHFooter = "text".
+-- Aturan highlight footer. Default: kata "Premium" jadi pill biru,
+-- selain itu (termasuk "Free") tampil normal.
+local footerText=""
+local footerRules={
+    {
+        Match="premium",
+        Color=Color3.fromRGB(198, 221, 255),
+        Background=Color3.fromRGB(37, 99, 235),
+        BorderColor=Color3.fromRGB(96, 165, 250),
+        BackgroundTransparency=0.12,
+        BorderTransparency=0.45
+    }
+}
+local function footerTrim(value)
+    value=string.gsub(tostring(value or ""),"^[%s%-|:,]+","")
+    value=string.gsub(value,"[%s%-|:,]+$","")
+    return value
+end
+function footerApi:AddHighlight(word, style)
+    if type(word)~="string" or word=="" then return nil end
+    style=type(style)=="table" and style or {}
+    local rule={
+        Match=string.lower(word),
+        Color=style.Color or Color3.fromRGB(198, 221, 255),
+        Background=style.Background or Color3.fromRGB(37, 99, 235),
+        BorderColor=style.BorderColor or Color3.fromRGB(96, 165, 250),
+        BackgroundTransparency=tonumber(style.BackgroundTransparency) or 0.12,
+        BorderTransparency=tonumber(style.BorderTransparency) or 0.45
+    }
+    table.insert(footerRules, 1, rule)
+    if footerText~="" then footerApi:SetText(footerText) end
+    return rule
+end
+function footerApi:ClearHighlights() footerRules={} if footerText~="" then footerApi:SetText(footerText) end end
+function footerApi:GetText() return footerText end
+function footerApi:SetText(text, opts)
+    footerApi:Clear()
+    text=tostring(text or "")
+    footerText=text
+    if text=="" then return nil end
+    opts=type(opts)=="table" and opts or {}
+    local lowered=string.lower(text)
+    local rule,hitStart,hitEnd
+    for _,candidate in ipairs(footerRules) do
+        local a,b=string.find(lowered, candidate.Match, 1, true)
+        if a then rule,hitStart,hitEnd=candidate,a,b break end
+    end
+    if not rule then
+        -- "Free" dan teks lainnya: tampil normal
+        return footerApi:AddText({Text=text, Color=opts.Color or Z.Sub, TextSize=opts.TextSize, Bold=opts.Bold})
+    end
+    local before=footerTrim(string.sub(text,1,hitStart-1))
+    local word=string.sub(text,hitStart,hitEnd)
+    local after=footerTrim(string.sub(text,hitEnd+1))
+    if before~="" then footerApi:AddText({Text=before, Color=opts.Color or Z.Sub, TextSize=opts.TextSize}) end
+    local badge=footerApi:AddBadge({
+        Name="FooterHighlight", Text=word, Color=rule.Color, Background=rule.Background,
+        BackgroundTransparency=rule.BackgroundTransparency, BorderColor=rule.BorderColor,
+        BorderTransparency=rule.BorderTransparency, TextSize=opts.TextSize or 9
+    })
+    if after~="" then footerApi:AddText({Text=after, Color=opts.Color or Z.Sub, TextSize=opts.TextSize}) end
+    return badge
+end
+fL.Footer=footerApi
+function fL:SetFooter(text, opts) return footerApi:SetText(text, opts) end
+function fL:GetFooter() return footerApi:GetText() end
+function fL:ClearFooter() footerApi:SetText("") end
+function fL:SetFooterVisible(value) footerApi:SetVisible(value) end
+function fL:AddFooterHighlight(word, style) return footerApi:AddHighlight(word, style) end
+-- VLHFooter = "text" lewat jalur yang sama, jadi aturan highlight ikut jalan.
 if type(ew.VLHFooter)=="string" and ew.VLHFooter~="" then
-    footerApi:AddText(ew.VLHFooter)
+    footerApi:SetText(ew.VLHFooter)
 end
 local gPerf=_:Create("Frame", {
     AnchorPoint=Vector2.new(1, 0.5), BackgroundColor3=Color3.fromRGB(22, 22, 22), BackgroundTransparency=0.05,
@@ -4443,7 +4511,7 @@ local flAll= {}
 local flZ=2;
 local function flLayer()if flGui and flGui.Parent then return flGui end;
 flGui=_:Create("ScreenGui", {
-    Name="VLHFloat", ZIndexBehavior=Enum.ZIndexBehavior.Sibling, ResetOnSpawn=false, IgnoreGuiInset=true, DisplayOrder=97
+    Name="VLHFloat", ZIndexBehavior=Enum.ZIndexBehavior.Sibling, ResetOnSpawn=false, IgnoreGuiInset=true, DisplayOrder=101
 }
 , _:GetGuiParent())return flGui end;
 
@@ -4649,8 +4717,7 @@ function fL:CreateFloat(cfg)
         flTrack(flMinBtn.Activated:Connect(function()ar(flMinBtn)flSetMin(not flMin, true)end))
     end;
     if flCloseBtn then
-        flTrack(flCloseBtn.Activated:Connect(function()ar(flCloseBtn)api:Hide()
-        if type(cfg.OnClose)=="function"then task.spawn(cfg.OnClose, api)end end))
+        flTrack(flCloseBtn.Activated:Connect(function()ar(flCloseBtn)api:Hide()end))
     end;
 
     -- ---------- keybind ----------
@@ -4732,14 +4799,52 @@ function fL:CreateFloat(cfg)
     function api:IsResizable()return flResize end;
     function api:BringToFront()flFront()end;
 
-    function api:SetVisible(v)flRoot.Visible=v~=false;
-    if flRoot.Visible then flFront()
-    if type(cfg.OnOpen)=="function"then task.spawn(cfg.OnOpen, api)end end end;
-    function api:Show()api:SetVisible(true)end;
-    function api:Hide()flRoot.Visible=false end;
-    function api:Toggle()if flRoot.Visible then api:Hide()else api:Show()end;
-    return flRoot.Visible end;
+    -- ---------- on / off ----------
+    function api:SetVisible(v, silent)
+        local want=v~=false;
+        local changed=flRoot.Visible~=want;
+        flRoot.Visible=want;
+        if want then flFront()
+        if changed and type(cfg.OnOpen)=="function"then task.spawn(cfg.OnOpen, api)end
+        elseif changed and type(cfg.OnClose)=="function"then task.spawn(cfg.OnClose, api)end;
+        if changed and silent~=true and type(cfg.OnToggle)=="function"then task.spawn(cfg.OnToggle, want, api)end;
+        return want end;
+    function api:Show()return api:SetVisible(true)end;
+    function api:Hide()return api:SetVisible(false)end;
+    function api:Toggle()return api:SetVisible(not flRoot.Visible)end;
     function api:IsVisible()return flRoot.Visible==true end;
+    -- alias on/off supaya kebaca jelas pas dipakai di toggle
+    api.SetEnabled=api.SetVisible;
+    api.IsEnabled=api.IsVisible;
+    function api:Enable()return api:SetVisible(true)end;
+    function api:Disable()return api:SetVisible(false)end;
+    function api:SetState(v)return api:SetVisible(v)end;
+    function api:GetState()return flRoot.Visible==true end;
+    -- bikin toggle siap pakai yang nyalain / matiin float ini
+    function api:BindToggle(target, tcfg)
+        tcfg=type(tcfg)=="table"and tcfg or {}
+        local host=target;
+        if type(host)=="table"and type(host.AddToggle)~="function"and type(host.AddSection)=="function"then
+            host=host:AddSection( { tcfg.SectionName or flTitle } )end;
+        if type(host)~="table"or type(host.AddToggle)~="function"then return nil end;
+        local userCb=tcfg.Callback or tcfg.callback;
+        local tgDefault=flRoot.Visible;
+        if tcfg.Default~=nil then tgDefault=tcfg.Default==true end;
+        local tg=host:AddToggle( {
+            Name=tcfg.Name or tcfg[1]or flTitle,
+            Default=tgDefault,
+            Description=tcfg.Desc or tcfg.Description or tcfg.Content,
+            Flag=tcfg.Flag, Icon=tcfg.Icon,
+            Callback=function(on)api:SetVisible(on, true)
+            if type(userCb)=="function"then task.spawn(userCb, on, api)end end
+        }
+        )
+        api:SetVisible(tgDefault, true)
+        if tg then api.ToggleElement=tg;
+        local prev=cfg.OnToggle;
+        cfg.OnToggle=function(on, self2)pcall(function()tg.Set(on, true)end)
+        if type(prev)=="function"then task.spawn(prev, on, self2)end end end;
+        return tg end;
 
     function api:Minimize()flSetMin(true, true)end;
     function api:Restore()flSetMin(false, true)end;
@@ -4753,11 +4858,32 @@ function fL:CreateFloat(cfg)
         for ci, cn in ipairs(flConns)do pcall(function()cn:Disconnect()end)end;
         flConns= {}
         pcall(function()flTab:Destroy()end)
+        if api.Flag and eq.Elements[api.Flag]and eq.Elements[api.Flag].Owner==api then eq.Elements[api.Flag]=nil end;
         for ci=#flAll, 1, -1 do if flAll[ci]==api then table.remove(flAll, ci)end end;
         if flRoot then flRoot:Destroy()end end;
     api.Unload=api.Destroy;
 
     if cfg.Minimized==true then flSetMin(true, false)end;
+    if cfg.Enabled==false or cfg.Visible==false or cfg.Default==false then flRoot.Visible=false end;
+    local flFlag=cfg.Flag or cfg.flag;
+    if flFlag~=nil and tostring(flFlag)~=""then
+        api.Flag=tostring(flFlag)
+        eq.Elements[api.Flag]= {
+            Owner=api,
+            Get=function()return {
+                on=flRoot.Visible and 1 or 0, m=flMin and 1 or 0, w=flW, h=flH,
+                xs=flRoot.Position.X.Scale, xo=flRoot.Position.X.Offset,
+                ys=flRoot.Position.Y.Scale, yo=flRoot.Position.Y.Offset
+            } end,
+            Set=function(t)if type(t)~="table"then return end;
+            if t.w and t.h then api:SetSize(t.w, t.h)end;
+            if t.xo and t.yo then flRoot.Position=UDim2.new(tonumber(t.xs)or 0, tonumber(t.xo)or 0, tonumber(t.ys)or 0, tonumber(t.yo)or 0)end;
+            if t.m~=nil then flSetMin(t.m==1 or t.m==true, false)end;
+            if t.on~=nil then api:SetVisible(t.on==1 or t.on==true)end end,
+            Encode=function(v)return v end,
+            Decode=function(l)return type(l)=="table"and l or nil end
+        }
+    end;
     flAll[#flAll+1]=api;
     fR( {
         Disconnect=function()pcall(function()api:Destroy()end)end
@@ -4773,6 +4899,9 @@ function fL:SetFloatsVisible(v)for I, p in ipairs(flAll)do pcall(function()p:Set
 function fL:ToggleFloats()for I, p in ipairs(flAll)do pcall(function()p:Toggle()end)end end;
 function fL:DestroyFloats()for I=#flAll, 1, -1 do local p=flAll[I]pcall(function()p:Destroy()end)end;
 flAll= {}end;
+fL.SetFloatsEnabled=fL.SetFloatsVisible;
+fL.ShowFloats=function(self)fL:SetFloatsVisible(true)end;
+fL.HideFloats=function(self)fL:SetFloatsVisible(false)end;
 
 function fL:AddTab(ew, icon)ew=normalizeVLHTabConfig(ew, icon)local kO=ew[1]or ew.Name or ew.Title or"Tab"local kP=ew[2]or ew.Icon or""local kQ=type(ew.__Detached)=="table"and ew.__Detached or nil;
 local requestedGroup=ew.Group or ew.Category
