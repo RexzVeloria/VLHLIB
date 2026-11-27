@@ -1,5 +1,6 @@
 -- tertawa tapi terluka -_-
 -- Rexz Is Boss
+local VLH_DEFAULT_FONT_MODE = "Minecraft"
 local a=game:GetService("Players")local b=game:GetService("RunService")local c=game:GetService("TweenService")local d=game:GetService("UserInputService")local e=game:GetService("VirtualUser")local f=game:GetService("HttpService")local g=game:GetService("TextService")local h=game:GetService("GuiService")local i=a.LocalPlayer;
 local function j()if identifyexecutor then local k,
 l=pcall(identifyexecutor)if k and l then return tostring(l)end end;
@@ -305,9 +306,64 @@ _.DefaultIcon="rbxassetid://117785011367332"_.GradientWhite=ColorSequence.new( {
     NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 1)
 }
 
-)function _:Create(a0, a1, a2)local a3=Instance.new(a0)for x,
+)
+-- Font selection is library-wide and applies to all VLH-owned GUI roots.
+-- Normal restores each object's original FontFace; VLHFooter keeps its own
+-- pixel font from the previous version unless the script changes that styling.
+_.FontMode="Normal"
+local fontRoots=setmetatable({}, {__mode="k"})
+local originalFontFaces=setmetatable({}, {__mode="k"})
+local function isFontObject(object)
+    return object:IsA("TextLabel") or object:IsA("TextButton") or object:IsA("TextBox")
+end
+local function applyFontToObject(object)
+    if not isFontObject(object) then return end
+    if _.FontMode=="Minecraft" then
+        if originalFontFaces[object]==nil then originalFontFaces[object]=object.FontFace end
+        object.Font=Enum.Font.Arcade
+    else
+        local original=originalFontFaces[object]
+        if original~=nil then object.FontFace=original;originalFontFaces[object]=nil end
+    end
+end
+function _:SetFontMode(mode)
+    local value=string.lower(tostring(mode or ""))
+    if value=="minecraft" or value=="pixel" or value=="arcade" then value="Minecraft"
+    elseif value=="normal" or value=="default" or value=="biasa" then value="Normal"
+    else return false,"Font mode must be Normal or Minecraft" end
+    _.FontMode=value
+    for root in pairs(fontRoots) do
+        if root.Parent then
+            for _,object in ipairs(root:GetDescendants()) do
+                pcall(applyFontToObject,object)
+            end
+        end
+    end
+    return true
+end
+function _:GetFontMode() return _.FontMode end
+function _:RegisterFontRoot(root)
+    if fontRoots[root] then return end
+    fontRoots[root]=true
+    root.DescendantAdded:Connect(function(object)
+        if isFontObject(object) then
+            -- Some controls assign Font after parenting; wait until creation finishes
+            -- so Normal mode can restore the correct original FontFace.
+            task.defer(function()
+                if object.Parent and object:IsDescendantOf(root) and _.FontMode=="Minecraft" then
+                    pcall(applyFontToObject,object)
+                end
+            end)
+        end
+    end)
+end
+_:SetFontMode(VLH_DEFAULT_FONT_MODE)
+function _:Create(a0, a1, a2)local a3=Instance.new(a0)for x,
 l in pairs(a1)do a3[x]=l end;
 if a2 then a3.Parent=a2 end;
+if a0=="ScreenGui" and (a3.Name=="VLHMain" or a3.Name=="VLHNotify" or a3.Name=="VLHTopbar" or a3.Name=="VLHKeySystem") then
+    _:RegisterFontRoot(a3)
+end
 return a3 end;
 function _:EnabledAFK()i.Idled:Connect(function()e:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)task.wait(1)e:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)end)end;
 function _:AddGradient(a3, a4, a5)return _:Create("UIGradient", {
@@ -1631,6 +1687,10 @@ eq.Brand="Veloria Hub"
 eq.Prefix="VLH"
 eq.Logo="rbxassetid://117785011367332"
 eq.DiscordURL="https://discord.gg/GrWpVXbWfj"
+function eq:SetFontMode(mode) return _:SetFontMode(mode) end
+function eq:GetFontMode() return _:GetFontMode() end
+eq.VLHSetFontMode=eq.SetFontMode
+eq.VLHGetFontMode=eq.GetFontMode
 eq.Unloaded=false;
 local er,
 es,
@@ -1678,7 +1738,7 @@ nil;
 local eG= {}
 
 local eH=eA and 36 or 14;
-local eI=g:GetTextSize(cR, 11, Enum.Font.GothamBold, Vector2.new(eu-eH-12, 1000))local eJ=ex and 22 or 8;
+local eI=g:GetTextSize(cR, 11, _.FontMode=="Minecraft" and Enum.Font.Arcade or Enum.Font.GothamBold, Vector2.new(eu-eH-12, 1000))local eJ=ex and 22 or 8;
 local eK=math.max(eJ+eI.Y+14, 32)local eL=_:Create("Frame", {
     BackgroundTransparency=1, BorderSizePixel=0, ClipsDescendants=true, LayoutOrder=et, Size=UDim2.new(1, 0, 0, eK), Name="NotifSlot"
 }
@@ -2098,7 +2158,7 @@ function eq:Notify(ew)return self:SetNotification(ew)end;
 function eq:RegisterIcon(a0, d0)return aD:Register(a0, d0)end;
 function eq:HasIcon(a0)return aD:Resolve(a0)~=nil end;
 function eq:GetIcons()return aD:List()end;
-task.defer(function()if f0()then eq:GetAutoSave()eq:RescanConfigs()end end)function eq:CreateWindow(ew)ew=ew or {} local compactMode=ew.Compact==true local fF=ew[1]or ew.Title or"Veloria Hub"local fG=ew[2]or ew.Description or""local fH=ew[3]or ew["Tab Width"]or 144;
+task.defer(function()if f0()then eq:GetAutoSave()eq:RescanConfigs()end end)function eq:CreateWindow(ew)ew=ew or {} if ew.FontMode~=nil then self:SetFontMode(ew.FontMode) end local compactMode=ew.Compact==true local fF=ew[1]or ew.Title or"Veloria Hub"local fG=ew[2]or ew.Description or""local fH=ew[3]or ew["Tab Width"]or 144;
 local fI=ew[4]or ew.SizeUi or UDim2.fromOffset(858, 560)local fJ=ew[5]or ew.Keybind or Enum.KeyCode.RightControl;
 local VLH_LOGO="rbxassetid://117785011367332"
 local VLH_FLOAT_ICON="rbxassetid://87349158369586"
@@ -3260,7 +3320,7 @@ local iQ=tostring(iP.Title or iP[1]or"Notice")local iR=tostring(iP.Content or iP
 }
 
 end;
-local eI=g:GetTextSize(iR, 11, Enum.Font.Gotham, Vector2.new(206, 1000))local iT=34+eI.Y+12+28+12;
+local eI=g:GetTextSize(iR, 11, _.FontMode=="Minecraft" and Enum.Font.Arcade or Enum.Font.Gotham, Vector2.new(206, 1000))local iT=34+eI.Y+12+28+12;
 fZ.ZIndex=100;
 local iU=_:Create("Frame", {
     Active=true, BackgroundColor3=Z.Black, BackgroundTransparency=1, BorderSizePixel=0, Size=UDim2.new(1, 0, 1, 0), ZIndex=59, Name="DialogBackdrop"
@@ -5650,6 +5710,10 @@ fL.VLHColorPicker=fL.ColorPicker
 fL.VLHSetTitle=fL.SetTitle
 fL.VLHSetDescription=fL.SetDescription
 fL.VLHOpenDiscord=fL.OpenDiscord
+function fL:SetFontMode(mode) return eq:SetFontMode(mode) end
+function fL:GetFontMode() return eq:GetFontMode() end
+fL.VLHSetFontMode=fL.SetFontMode
+fL.VLHGetFontMode=fL.GetFontMode
 function fL:ExportConfigText() return eq:ExportConfigText() end
 function fL:ImportConfigText(text) return eq:ImportConfigText(text) end
 fL.VLHExportConfigText=fL.ExportConfigText
