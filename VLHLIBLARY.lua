@@ -1,4 +1,4 @@
--- tertawa tapi terluka
+-- tertawa tapi terluka -_-
 -- Rexz Is Boss
 local a=game:GetService("Players")local b=game:GetService("RunService")local c=game:GetService("TweenService")local d=game:GetService("UserInputService")local e=game:GetService("VirtualUser")local f=game:GetService("HttpService")local g=game:GetService("TextService")local h=game:GetService("GuiService")local i=a.LocalPlayer;
 local function j()if identifyexecutor then local k,
@@ -2623,11 +2623,12 @@ if type(ew.VLHFooter)=="string" and ew.VLHFooter~="" then
         -- Escape supplied text before adding our own RichText markup.
         local safe=text:gsub("&","&amp;"):gsub("<","&lt;"):gsub(">","&gt;")
         safe=safe:gsub(premiumPattern,function(word)
-            return '<font color="#4DA6FF">'..word..'</font>'
+            return '<font color="#4DA6FF"><b>'..word..'</b></font>'
         end)
-        footerApi:AddText({Text=safe,Properties={RichText=true}})
+        -- Arcade is Roblox's built-in pixel-style font; spaces are left untouched.
+        footerApi:AddText({Text=safe,Properties={RichText=true,Font=Enum.Font.Arcade}})
     else
-        footerApi:AddText(text)
+        footerApi:AddText({Text=text,Properties={Font=Enum.Font.Arcade}})
     end
 end
 if ew.Version~=nil and tostring(ew.Version)~="" then
