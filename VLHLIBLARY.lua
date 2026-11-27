@@ -1,4 +1,4 @@
--- tertawa tapi terluka -_-
+-- tertawa tapi terluka
 -- Rexz Is Boss
 local a=game:GetService("Players")local b=game:GetService("RunService")local c=game:GetService("TweenService")local d=game:GetService("UserInputService")local e=game:GetService("VirtualUser")local f=game:GetService("HttpService")local g=game:GetService("TextService")local h=game:GetService("GuiService")local i=a.LocalPlayer;
 local function j()if identifyexecutor then local k,
@@ -2617,7 +2617,18 @@ function footerApi:SetBarHeight(height)
 end
 -- Public footer configuration is intentionally a single string: VLHFooter = "text".
 if type(ew.VLHFooter)=="string" and ew.VLHFooter~="" then
-    footerApi:AddText(ew.VLHFooter)
+    local text=ew.VLHFooter
+    local premiumPattern="([Pp][Rr][Ee][Mm][Ii][Uu][Mm])"
+    if string.find(text,premiumPattern) then
+        -- Escape supplied text before adding our own RichText markup.
+        local safe=text:gsub("&","&amp;"):gsub("<","&lt;"):gsub(">","&gt;")
+        safe=safe:gsub(premiumPattern,function(word)
+            return '<font color="#4DA6FF">'..word..'</font>'
+        end)
+        footerApi:AddText({Text=safe,Properties={RichText=true}})
+    else
+        footerApi:AddText(text)
+    end
 end
 if ew.Version~=nil and tostring(ew.Version)~="" then
     footerApi:AddBadge({Text=tostring(ew.Version), Background=Color3.fromRGB(23,23,23)})
