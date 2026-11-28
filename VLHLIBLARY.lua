@@ -1620,7 +1620,136 @@ for I, dy in ipairs(eh)do pcall(dy, dt)end end)return true end;
 function _:ClearImageCache()d7= {}
 
 if listfiles and delfile then pcall(function()for I, co in ipairs(listfiles(d9))do pcall(delfile, co)end end)end end;
+-- Remote icon definitions, loaded once before the library is returned.
+local VLHRemoteIcons = {}
+local VLHIconURL = "https://raw.githubusercontent.com/RexzVeloria/VLHLIB/refs/heads/main/icon.json"
+local VLHIconStatus = {loaded=false, count=0, error="Belum dimuat"}
+local function VLHValue(v)
+    if type(v)=="number" then return tostring(math.floor(v)) end
+    if type(v)=="string" and v~="" then return v end
+    return nil
+end
+local function VLHCandidates(def)
+    local list={}
+    if type(def)=="string" then
+        if string.match(def,"^https?://") or string.match(def,"^rbxassetid://") or string.match(def,"^%d+$") then
+            table.insert(list,{kind="image",value=def})
+        else table.insert(list,{kind="svg",value=def}) end
+    elseif type(def)=="table" then
+        local svg=VLHValue(def.svg or def.SVG or def.path)
+        local asset=VLHValue(def.assetId or def.asset_id or def.asset or def.AssetId)
+        local url=VLHValue(def.url or def.link or def.URL)
+        if svg then table.insert(list,{kind="svg",value=svg}) end
+        if asset then table.insert(list,{kind="image",value=asset}) end
+        if url then table.insert(list,{kind="image",value=url}) end
+    end
+    return list
+end
+local function VLHResolveSvg(value)
+    if string.match(value,"^https?://") then value=de(value)
+    elseif string.match(string.lower(value),"%.svg$") and readfile then
+        local ok, text=pcall(readfile,value);value=ok and text or nil
+    end
+    if type(value)~="string" or value=="" then return nil end
+    if string.sub(value,1,4)=="svg:" then value=string.sub(value,5) end
+    local ok, path=pcall(function()
+        if string.find(value,"<",1,true) then return aD:FromSvgText(value) end
+        return value
+    end)
+    if not ok or type(path)~="string" or path=="" then return nil end
+    local valid, geometry=pcall(function() return aD:Compile(path) end)
+    if not valid or type(geometry)~="table" or (#(geometry.subs or {})==0 and #(geometry.dots or {})==0) then return nil end
+    return "svg:"..path
+end
+local function VLHMakeRemoteIcon(parent, definition, options, name)
+    local candidates=VLHCandidates(definition)
+    -- If the remote sources fail, retain a local icon of the same name when available.
+    if aD:Resolve(name) then table.insert(candidates,{kind="builtin",value=name}) end
+    local frame=Instance.new("Frame")
+    frame.BackgroundTransparency=1;frame.BorderSizePixel=0
+    frame.Name=options.Name or "Icon"
+    frame.Size=options.Size or UDim2.new(0,16,0,16)
+    for key,value in pairs(options) do
+        if key~="Color" and key~="Thickness" and key~="Size" and key~="Tint" and key~="OnFail" then
+            pcall(function() frame[key]=value end)
+        end
+    end
+    frame.Parent=parent
+    local current, destroyed, currentColor, transparency=nil,false,options.Color,nil
+    local handle={Instance=frame,Kind="remote"}
+    function handle.SetColor(color, animate)
+        currentColor=color
+        if current then current.SetColor(color,animate) end
+    end
+    function handle.SetTransparency(value)
+        transparency=value
+        if current then current.SetTransparency(value) end
+    end
+    function handle.Destroy()
+        destroyed=true
+        if current then current.Destroy();current=nil end
+        frame:Destroy()
+    end
+    local function adopt(graphic)
+        if destroyed then graphic.Destroy();return end
+        if current then current.Destroy() end
+        current=graphic
+        if currentColor then current.SetColor(currentColor,false) end
+        if transparency~=nil then current.SetTransparency(transparency) end
+    end
+    task.spawn(function()
+        for candidateIndex,candidate in ipairs(candidates) do
+            if destroyed then return end
+            local value=candidate.value
+            if candidate.kind=="svg" then value=VLHResolveSvg(value) end
+            if value then
+                -- A builtin resolves as a name only if not routed back to this remote entry.
+                if candidate.kind=="builtin" then
+                    local ok,path=pcall(function() return aD.Custom[aD:Resolve(value)] or aD.Data[aD:Resolve(value)] end)
+                    value=ok and path and ("svg:"..path) or nil
+                end
+                if value then
+                    local pixelSize=(options.Size and options.Size.X.Offset>0) and options.Size.X.Offset or 16
+                    local opts={Size=UDim2.new(0,pixelSize,0,pixelSize),Color=options.Color,Thickness=options.Thickness,Tint=options.Tint}
+                    local ok,graphic=pcall(function() return _:MakeIcon(frame,value,opts) end)
+                    if ok and graphic then
+                        graphic.Instance.Size=UDim2.new(1,0,1,0)
+                        if candidate.kind=="svg" or candidate.kind=="builtin" then
+                            adopt(graphic);return
+                        end
+                        -- For images, SetImage may download asynchronously. Wait for its
+                        -- asset URI, then ask ContentProvider for the actual fetch status.
+                        local img=graphic.Image
+                        local deadline=os.clock()+12
+                        while not destroyed and img and img.Image=="" and os.clock()<deadline do task.wait(0.1) end
+                        local loaded=false
+                        if not destroyed and img and img.Image~="" then
+                            local fetchFinished=false
+                            task.spawn(function()
+                                local worked=pcall(function()
+                                    game:GetService("ContentProvider"):PreloadAsync({img},function(_,status)
+                                        if status==Enum.AssetFetchStatus.Success then loaded=true end
+                                    end)
+                                end)
+                                fetchFinished=true
+                            end)
+                            while not destroyed and not fetchFinished and os.clock()<deadline do task.wait(0.1) end
+                            if not fetchFinished then loaded=false end
+                        end
+                        if not destroyed and loaded then adopt(graphic);return end
+                        graphic.Destroy()
+                    end
+                end
+            end
+        end
+        if not destroyed and options.OnFail then pcall(options.OnFail,name) end
+    end)
+    return handle
+end
 function _:MakeIcon(a2, d0, a1)if d0==nil or d0==""or d0==false then return nil end;
+if type(d0)=="string" and VLHRemoteIcons[aF(d0)] then
+    return VLHMakeRemoteIcon(a2,VLHRemoteIcons[aF(d0)],a1 or {},d0)
+end;
 a1=a1 or {}
 
 local ax=16;
@@ -2156,8 +2285,51 @@ self:SaveConfig(eW, true)end end)end;
 function eq:ClearImageCache()_:ClearImageCache()end;
 function eq:Notify(ew)return self:SetNotification(ew)end;
 function eq:RegisterIcon(a0, d0)return aD:Register(a0, d0)end;
-function eq:HasIcon(a0)return aD:Resolve(a0)~=nil end;
-function eq:GetIcons()return aD:List()end;
+function eq:HasIcon(a0)return VLHRemoteIcons[aF(a0)]~=nil or aD:Resolve(a0)~=nil end;
+function eq:GetIcons()
+    local list=aD:List() local seen={}
+    for _,name in ipairs(list) do seen[name]=true end
+    for name in pairs(VLHRemoteIcons) do if not seen[name] then table.insert(list,name) end end
+    table.sort(list) return list
+end;
+function eq:ImportIconsJSON(input, options)
+    options=type(options)=="table" and options or {}
+    local data=input
+    if type(input)=="string" then
+        local ok,result=pcall(function() return f:JSONDecode(input) end)
+        if not ok then return false,"JSON tidak valid: "..tostring(result) end
+        data=result
+    end
+    if type(data)~="table" then return false,"Format harus berupa objek JSON nama ke ikon" end
+    local result={added=0,skipped=0,invalid=0}
+    for name,definition in pairs(data) do
+        if type(name)~="string" or name=="" or #VLHCandidates(definition)==0 then
+            result.invalid=result.invalid+1
+        elseif options.Overwrite~=true and self:HasIcon(name) then
+            result.skipped=result.skipped+1
+        else
+            VLHRemoteIcons[aF(name)]=definition
+            result.added=result.added+1
+        end
+    end
+    return true,result
+end;
+function eq:LoadIconsURL(url)
+    url=url or VLHIconURL
+    local body=de(url)
+    if not body then VLHIconStatus={loaded=false,count=0,error="Gagal mengambil icon.json"};return false,VLHIconStatus.error end
+    local ok,result=self:ImportIconsJSON(body)
+    if not ok then VLHIconStatus={loaded=false,count=0,error=result};return false,result end
+    VLHIconStatus={loaded=true,count=result.added,skipped=result.skipped,invalid=result.invalid,url=url}
+    return true,result
+end;
+function eq:GetIconJSONStatus()
+    local copy={} for k,v in pairs(VLHIconStatus) do copy[k]=v end return copy
+end;
+-- Import synchronously so icons are ready when the caller creates the first tab.
+-- An HTTP or JSON failure never stops the library; local built-ins remain available.
+do local ok,err=eq:LoadIconsURL(VLHIconURL) if not ok then warn("[VLH Icons] "..tostring(err)) end end;
+
 task.defer(function()if f0()then eq:GetAutoSave()eq:RescanConfigs()end end)function eq:CreateWindow(ew)ew=ew or {} if ew.FontMode~=nil then self:SetFontMode(ew.FontMode) end local compactMode=ew.Compact==true local fF=ew[1]or ew.Title or"Veloria Hub"local fG=ew[2]or ew.Description or""local fH=ew[3]or ew["Tab Width"]or 144;
 local fI=ew[4]or ew.SizeUi or UDim2.fromOffset(858, 560)local fJ=ew[5]or ew.Keybind or Enum.KeyCode.RightControl;
 local VLH_LOGO="rbxassetid://117785011367332"
